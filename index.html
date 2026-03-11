@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Scoring Prospect PV v2.0</title>
+  <title>Scoring Prospect PV v3.0</title>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -48,11 +48,15 @@
       let pts=0,max=0,details=[];
       const dpeMap={D:10,E:9,C:8,F:7,B:5,G:4,A:2};
       if(d.etiquetteDpe){const v=dpeMap[d.etiquetteDpe]||0;pts+=v;max+=10;details.push({l:`Étiquette ${d.etiquetteDpe}`,p:v,m:10});}
-      const eMap={"Fioul domestique":8,GPL:7,"Électricité":6,"Gaz naturel":5,Bois:2,PAC:2};
-      if(d.energieChauffage){const v=eMap[d.energieChauffage]||0;pts+=v;max+=8;details.push({l:`Énergie: ${d.energieChauffage}`,p:v,m:8});}
-      if(d.coutAnnuel!==""){const c=+d.coutAnnuel;const v=c>3000?7:c>2000?5:c>1000?3:1;pts+=v;max+=7;details.push({l:`Coût ${c.toLocaleString("fr-FR")} €/an`,p:v,m:7});}
-      if(d.consoEF!==""){const c=+d.consoEF;const v=c>20000?5:c>10000?4:c>5000?2:1;pts+=v;max+=5;details.push({l:`Conso ${(c/1000).toFixed(1)}k kWh`,p:v,m:5});}
-      return{pts,max:max||30,details,section:"DPE Enrichi",color:C.accent};
+      const eMap={"Fioul domestique":6,GPL:5,"Électricité":5,"Gaz naturel":4,Bois:2,PAC:2};
+      if(d.energieChauffage){const v=eMap[d.energieChauffage]||0;pts+=v;max+=6;details.push({l:`Chauffage: ${d.energieChauffage}`,p:v,m:6});}
+      const ecsMap={"Électricité (ballon)":4,"Électricité (thermodynamique)":3,"Fioul domestique":3,GPL:3,"Gaz naturel":2,"Solaire thermique":1,Bois:1,"Réseau de chaleur":0};
+      if(d.energieECS){const v=ecsMap[d.energieECS]??0;pts+=v;max+=4;details.push({l:`ECS: ${d.energieECS}`,p:v,m:4});}
+      if(d.coutChauffage!==""){const c=+d.coutChauffage;const v=c>2500?5:c>1500?4:c>800?3:c>300?2:1;pts+=v;max+=5;details.push({l:`Coût chauff. ${c.toLocaleString("fr-FR")} €/an`,p:v,m:5});}
+      if(d.coutECS!==""){const c=+d.coutECS;const v=c>500?3:c>250?2:1;pts+=v;max+=3;details.push({l:`Coût ECS ${c.toLocaleString("fr-FR")} €/an`,p:v,m:3});}
+      if(d.consoElec!==""){const c=+d.consoElec;const v=c>5000?3:c>2000?2:1;pts+=v;max+=3;details.push({l:`Conso élec. ${(c/1000).toFixed(1)}k kWh`,p:v,m:3});}
+      if(d.consoChauffFossile!==""){const c=+d.consoChauffFossile;const v=c>15000?3:c>8000?2:1;pts+=v;max+=3;details.push({l:`Conso chauff. fossile ${(c/1000).toFixed(1)}k kWh`,p:v,m:3});}
+      return{pts,max:max||34,details,section:"DPE Enrichi",color:C.accent};
     }
 
     function scoreGeo(d){
@@ -61,9 +65,7 @@
       if(d.zoneClimatique){const v=zMap[d.zoneClimatique]||6;pts+=v;max+=14;details.push({l:`Zone ${d.zoneClimatique}`,p:v,m:14});}
       const aMap={"< 400m":3,"400-800m":2,"> 800m":1};
       if(d.altitude){const v=aMap[d.altitude]||2;pts+=v;max+=3;details.push({l:`Altitude ${d.altitude}`,p:v,m:3});}
-      const tMap={Périurbain:3,Rural:2,"Urbain dense":1};
-      if(d.typeZone){const v=tMap[d.typeZone]||2;pts+=v;max+=3;details.push({l:`Zone ${d.typeZone}`,p:v,m:3});}
-      return{pts,max:max||20,details,section:"Géographique",color:C.blue};
+      return{pts,max:max||17,details,section:"Géographique",color:C.blue};
     }
 
     function scoreToiture(d){
@@ -73,10 +75,8 @@
       const iMap={"15-35°":5,"0-15° (plat)":3,"35-45°":3,"> 45°":1};
       if(d.inclinaisonToiture){const v=iMap[d.inclinaisonToiture]||3;pts+=v;max+=5;details.push({l:`Inclinaison ${d.inclinaisonToiture}`,p:v,m:5});}
       if(d.surfaceToiture!==""){const s=+d.surfaceToiture;const v=s>60?4:s>40?3:s>20?2:1;pts+=v;max+=4;details.push({l:`Surface toiture ${s} m²`,p:v,m:4});}
-      const omMap={Aucun:3,"Partiel (arbre, bâtiment)":1,Important:0};
-      if(d.ombrage){const v=omMap[d.ombrage]??1;pts+=v;max+=3;details.push({l:`Ombrage: ${d.ombrage}`,p:v,m:3});}
       if(d.etatToiture){const v=d.etatToiture==="Bon état"?3:d.etatToiture==="Correct"?2:0;pts+=v;max+=3;details.push({l:`État: ${d.etatToiture}`,p:v,m:3});}
-      return{pts,max:max||23,details,section:"Faisabilité Toiture",color:C.cyan};
+      return{pts,max:max||20,details,section:"Faisabilité Toiture",color:C.cyan};
     }
 
     function scoreBatiment(d){
@@ -93,40 +93,59 @@
 
     function scoreSocio(d){
       let pts=0,max=0,details=[];
-      if(d.proprietaire){const v=d.proprietaire==="Propriétaire occupant"?6:d.proprietaire==="Propriétaire bailleur"?3:0;pts+=v;max+=6;details.push({l:d.proprietaire,p:v,m:6});}
-      const rMap={"Déciles 6-8":5,"Déciles 9-10":4,"Déciles 4-5":3,"Déciles 1-3":1};
-      if(d.revenus){const v=rMap[d.revenus]||0;pts+=v;max+=5;details.push({l:`Revenus ${d.revenus}`,p:v,m:5});}
-      if(d.revenuMedianIRIS!==""){const r=+d.revenuMedianIRIS;const v=r>28000?4:r>22000?3:r>16000?2:1;pts+=v;max+=4;details.push({l:`Revenu médian IRIS ${(r/1000).toFixed(0)}k€`,p:v,m:4});}
-      if(d.tauxProprioIRIS!==""){const t=+d.tauxProprioIRIS;const v=t>70?3:t>50?2:1;pts+=v;max+=3;details.push({l:`Taux proprio IRIS ${t}%`,p:v,m:3});}
-      if(d.partMaisonsIRIS!==""){const m=+d.partMaisonsIRIS;const v=m>70?2:m>40?1:0;pts+=v;max+=2;details.push({l:`Part maisons IRIS ${m}%`,p:v,m:2});}
-      if(d.piscine){pts+=3;max+=3;details.push({l:"Piscine",p:3,m:3});}
-      if(d.vehiculeElec){pts+=3;max+=3;details.push({l:"Véhicule électrique",p:3,m:3});}
-      if(d.climatisation){pts+=2;max+=2;details.push({l:"Climatisation",p:2,m:2});}
-      return{pts,max:max||20,details,section:"Socio & Équipements",color:C.green};
+      if(d.climatisation){pts+=2;max+=2;details.push({l:"Climatisation / PAC",p:2,m:2});}
+      return{pts,max:max||2,details,section:"Équipements",color:C.green};
     }
 
     function scoreBonus(d){
       let pts=0,details=[];
-      if(d.voisinagePV){pts+=4;details.push({l:"Voisinage PV",p:4,m:4});}
       if(d.traversant){pts+=2;details.push({l:"Logement traversant",p:2,m:2});}
       if(d.isolationInsuffisante){pts+=2;details.push({l:"Isolation insuffisante (opportunité)",p:2,m:2});}
-      if(d.zoneABF){pts-=8;details.push({l:"Zone ABF / classée",p:-8,m:0});}
-      if(d.toitureNord){pts-=10;details.push({l:"Toiture Nord exclusive",p:-10,m:0});}
-      if(d.aidesLocales){pts+=3;details.push({l:"Aides locales disponibles",p:3,m:3});}
-      return{pts,max:10,details,section:"Bonus / Malus",color:C.dim};
+      return{pts,max:4,details,section:"Bonus / Malus",color:C.dim};
+    }
+
+    // ═══════════ SCORING FACILITÉ ═══════════
+
+    function scoreFacilite(d){
+      let sections=[];
+
+      // Type de chauffage → facilité
+      let pts1=0,max1=0,det1=[];
+      const chMap={"PAC":10,"Électricité":9,"Gaz naturel":6,"Bois":4,GPL:3,"Fioul domestique":2};
+      if(d.energieChauffage){const v=chMap[d.energieChauffage]||4;pts1+=v;max1+=10;det1.push({l:`Chauffage: ${d.energieChauffage}`,p:v,m:10});}
+      sections.push({pts:pts1,max:max1||10,details:det1,section:"Système chauffage",color:"#22D3EE"});
+
+      // Type ECS → facilité
+      let pts2=0,max2=0,det2=[];
+      const ecsMap={"Électricité (ballon)":10,"Électricité (thermodynamique)":10,"Solaire thermique":8,"Gaz naturel":5,GPL:3,"Fioul domestique":2,Bois:2,"Réseau de chaleur":7};
+      if(d.energieECS){const v=ecsMap[d.energieECS]||5;pts2+=v;max2+=10;det2.push({l:`ECS: ${d.energieECS}`,p:v,m:10});}
+      sections.push({pts:pts2,max:max2||10,details:det2,section:"Système ECS",color:"#34D399"});
+
+      // Qualité isolation
+      let pts3=0,max3=0,det3=[];
+      const isoMap={"Bonne":10,"Moyenne":7,"Insuffisante":3,"Très insuffisante":1};
+      if(d.qualiteIsolation){const v=isoMap[d.qualiteIsolation]||5;pts3+=v;max3+=10;det3.push({l:`Isolation: ${d.qualiteIsolation}`,p:v,m:10});}
+      sections.push({pts:pts3,max:max3||10,details:det3,section:"Isolation enveloppe",color:"#A78BFA"});
+
+      const rawPts=sections.reduce((s,sec)=>s+sec.pts,0);
+      const maxR=sections.reduce((s,sec)=>s+sec.max,0);
+      const score=maxR>0?Math.max(0,Math.min(100,Math.round((rawPts/maxR)*100))):0;
+      return{score,sections};
     }
 
     function computeROI(d){
-      if(!d.zoneClimatique||d.surfaceToiture===""||d.coutAnnuel==="") return null;
+      const coutTotal=(d.coutChauffage!==""?+d.coutChauffage:0)+(d.coutECS!==""?+d.coutECS:0);
+      if(!d.zoneClimatique||d.surfaceToiture===""||coutTotal===0) return null;
       const prodMap={H3:1350,H2d:1250,H2c:1200,H2b:1100,H2a:1050,H1c:1000,H1b:950,H1a:900};
       const kWhParKwc=prodMap[d.zoneClimatique]||1050;
-      const surfUtil=+d.surfaceToiture*(d.ombrage==="Important"?0.5:d.ombrage==="Partiel (arbre, bâtiment)"?0.75:1);
+      const surfUtil=+d.surfaceToiture;
       const oCoeff={Sud:1,"Sud-Est":0.94,"Sud-Ouest":0.94,Est:0.82,Ouest:0.82,"Nord-Est":0.6,"Nord-Ouest":0.6,Nord:0.45}[d.orientationToiture]||0.9;
       const iCoeff={"15-35°":1,"0-15° (plat)":0.9,"35-45°":0.92,"> 45°":0.78}[d.inclinaisonToiture]||0.92;
       const kwcMax=Math.min(9,Math.floor(surfUtil/6));
       if(kwcMax<1) return null;
       const prodAnnuelle=kwcMax*kWhParKwc*oCoeff*iCoeff;
-      const tauxAutoconso=d.consoEF!==""?Math.min(0.7,(+d.consoEF*0.7)/prodAnnuelle):0.45;
+      const consoElecTot=d.consoElec!==""?+d.consoElec:0;
+      const tauxAutoconso=consoElecTot>0?Math.min(0.7,(consoElecTot*0.7)/prodAnnuelle):0.45;
       const prixKwh=0.2516,prixRevente=0.1269;
       const econAutoconso=prodAnnuelle*tauxAutoconso*prixKwh;
       const reventeExcedent=prodAnnuelle*(1-tauxAutoconso)*prixRevente;
@@ -135,7 +154,7 @@
       const primeAutoconso=kwcMax<=3?kwcMax*370:kwcMax<=9?kwcMax*280:kwcMax*200;
       const investNet=coutInstall-primeAutoconso;
       const retour=gainAnnuel>0?investNet/gainAnnuel:99;
-      return{kwc:kwcMax,prodAnnuelle:Math.round(prodAnnuelle),gainAnnuel:Math.round(gainAnnuel),investNet:Math.round(investNet),retour:Math.round(retour*10)/10,tauxAutoconso:Math.round(tauxAutoconso*100),econAutoconso:Math.round(econAutoconso),reventeExcedent:Math.round(reventeExcedent),primeAutoconso:Math.round(primeAutoconso)};
+      return{kwc:kwcMax,prodAnnuelle:Math.round(prodAnnuelle),gainAnnuel:Math.round(gainAnnuel),investNet:Math.round(investNet),retour:Math.round(retour*10)/10,tauxAutoconso:Math.round(tauxAutoconso*100),econAutoconso:Math.round(econAutoconso),reventeExcedent:Math.round(reventeExcedent),primeAutoconso:Math.round(primeAutoconso),coutTotal:Math.round(coutTotal)};
     }
 
     function computeTotal(d){
@@ -144,12 +163,15 @@
       const maxR=sections.reduce((s,sec)=>s+sec.max,0);
       const norm=maxR>0?Math.round((rawPts/maxR)*100):0;
       const score=Math.max(0,Math.min(100,norm));
-      const allFields=[d.etiquetteDpe,d.energieChauffage,d.coutAnnuel,d.consoEF,d.zoneClimatique,d.altitude,d.typeZone,d.orientationToiture,d.inclinaisonToiture,d.surfaceToiture,d.ombrage,d.etatToiture,d.typeBatiment,d.surface,d.niveaux,d.periodeConstruction,d.pvExistant,d.proprietaire,d.revenus,d.revenuMedianIRIS,d.tauxProprioIRIS,d.partMaisonsIRIS];
+      const allFields=[d.etiquetteDpe,d.energieChauffage,d.energieECS,d.coutChauffage,d.coutECS,d.consoElec,d.consoChauffFossile,d.zoneClimatique,d.altitude,d.orientationToiture,d.inclinaisonToiture,d.surfaceToiture,d.etatToiture,d.typeBatiment,d.surface,d.niveaux,d.periodeConstruction,d.pvExistant,d.qualiteIsolation];
       const filled=allFields.filter(v=>v!==""&&v!==null&&v!==undefined).length;
-      const boolFields=[d.piscine,d.vehiculeElec,d.climatisation,d.voisinagePV,d.traversant,d.isolationInsuffisante,d.zoneABF,d.toitureNord,d.aidesLocales];
+      const boolFields=[d.climatisation,d.traversant,d.isolationInsuffisante];
       const boolFilled=boolFields.some(b=>b)?1:0;
       const completude=Math.round(((filled+boolFilled)/(allFields.length+1))*100);
-      return{score,sections,completude,roi:computeROI(d)};
+      const facilite=scoreFacilite(d);
+      // Global = moyenne pondérée : 60% prospect + 40% facilité
+      const global=score>0&&facilite.score>0?Math.round(score*0.6+facilite.score*0.4):score>0?score:facilite.score>0?facilite.score:0;
+      return{score,sections,completude,roi:computeROI(d),facilite,global};
     }
 
     // ═══════════ UI ═══════════
@@ -242,7 +264,7 @@
     function ROICard({roi}){
       if(!roi) return React.createElement("div",{style:{marginTop:14,padding:14,background:C.orangeDim,border:`1px solid ${C.orange}33`,borderRadius:10}},
         React.createElement("div",{style:{fontSize:12,fontWeight:700,color:C.orange,marginBottom:4}},"📊 Estimateur ROI"),
-        React.createElement("div",{style:{fontSize:11,color:C.muted,lineHeight:1.5}},"Renseignez la zone climatique, la surface toiture et le coût énergie annuel pour activer l'estimation.")
+        React.createElement("div",{style:{fontSize:11,color:C.muted,lineHeight:1.5}},"Renseignez la zone climatique, la surface toiture et le coût chauffage pour activer l'estimation.")
       );
       const retourColor=roi.retour<=8?C.green:roi.retour<=12?C.accent:C.red;
       const roiLines=[["Puissance installable",`${roi.kwc} kWc`],["Production annuelle",`${roi.prodAnnuelle.toLocaleString("fr-FR")} kWh`],["Taux d'autoconsommation",`${roi.tauxAutoconso}%`],["Économie autoconso.",`${roi.econAutoconso.toLocaleString("fr-FR")} €/an`],["Revente excédent (OA)",`${roi.reventeExcedent.toLocaleString("fr-FR")} €/an`],["Prime autoconsommation",`${roi.primeAutoconso.toLocaleString("fr-FR")} €`],["Investissement net",`${roi.investNet.toLocaleString("fr-FR")} €`]];
@@ -270,9 +292,9 @@
 
     // ═══════════ MAIN ═══════════
 
-    const INIT={etiquetteDpe:"",energieChauffage:"",coutAnnuel:"",consoEF:"",zoneClimatique:"",altitude:"",typeZone:"",orientationToiture:"",inclinaisonToiture:"",surfaceToiture:"",ombrage:"",etatToiture:"",typeBatiment:"",surface:"",niveaux:"",periodeConstruction:"",pvExistant:"",proprietaire:"",revenus:"",revenuMedianIRIS:"",tauxProprioIRIS:"",partMaisonsIRIS:"",piscine:false,vehiculeElec:false,climatisation:false,voisinagePV:false,traversant:false,isolationInsuffisante:false,zoneABF:false,toitureNord:false,aidesLocales:false};
+    const INIT={etiquetteDpe:"",energieChauffage:"",energieECS:"",coutChauffage:"",coutECS:"",consoElec:"",consoChauffFossile:"",zoneClimatique:"",altitude:"",orientationToiture:"",inclinaisonToiture:"",surfaceToiture:"",etatToiture:"",typeBatiment:"",surface:"",niveaux:"",periodeConstruction:"",pvExistant:"",qualiteIsolation:"",climatisation:false,traversant:false,isolationInsuffisante:false};
 
-    const EXAMPLE={...INIT,etiquetteDpe:"F",energieChauffage:"Fioul domestique",coutAnnuel:"2875",consoEF:"18907",zoneClimatique:"H2b",altitude:"< 400m",typeZone:"Rural",orientationToiture:"Sud-Ouest",inclinaisonToiture:"15-35°",surfaceToiture:"55",ombrage:"Aucun",etatToiture:"Correct",typeBatiment:"Maison",surface:"81",niveaux:"1",periodeConstruction:"1948-1974",pvExistant:"Non",proprietaire:"Propriétaire occupant",revenus:"Déciles 4-5",revenuMedianIRIS:"19500",tauxProprioIRIS:"72",partMaisonsIRIS:"88",traversant:true,isolationInsuffisante:true};
+    const EXAMPLE={...INIT,etiquetteDpe:"F",energieChauffage:"Fioul domestique",energieECS:"Fioul domestique",coutChauffage:"2316",coutECS:"432",consoElec:"364",consoChauffFossile:"15629",zoneClimatique:"H2b",altitude:"< 400m",orientationToiture:"Sud-Ouest",inclinaisonToiture:"15-35°",surfaceToiture:"55",etatToiture:"Correct",typeBatiment:"Maison",surface:"81",niveaux:"1",periodeConstruction:"1948-1974",pvExistant:"Non",qualiteIsolation:"Insuffisante",traversant:true,isolationInsuffisante:true};
 
     function App(){
       const[data,setData]=useState(INIT);
@@ -287,32 +309,70 @@
         {label:"Géo",icon:"📍",color:C.blue},
         {label:"Toiture",icon:"🏗️",color:C.cyan},
         {label:"Bâtiment",icon:"🏠",color:C.purple},
-        {label:"Profil",icon:"👤",color:C.green},
+        {label:"Équip.",icon:"⚙️",color:C.green},
+        {label:"Réno",icon:"🔧",color:"#22D3EE"},
         {label:"Bonus",icon:"±",color:C.dim},
       ];
 
       const isMobile=typeof window!=="undefined"&&window.innerWidth<=768;
 
+      function MiniGauge({score,label,color,size}){
+        const sz=size||100,circ=Math.PI*(sz-12),off=circ-(score/100)*circ;
+        return React.createElement("div",{style:{display:"flex",flexDirection:"column",alignItems:"center"}},
+          React.createElement("svg",{width:sz,height:sz/2+18,viewBox:`0 0 ${sz} ${sz/2+18}`},
+            React.createElement("path",{d:`M 6 ${sz/2+6} A ${sz/2-6} ${sz/2-6} 0 0 1 ${sz-6} ${sz/2+6}`,fill:"none",stroke:C.border,strokeWidth:6,strokeLinecap:"round"}),
+            React.createElement("path",{d:`M 6 ${sz/2+6} A ${sz/2-6} ${sz/2-6} 0 0 1 ${sz-6} ${sz/2+6}`,fill:"none",stroke:color,strokeWidth:6,strokeLinecap:"round",strokeDasharray:circ,strokeDashoffset:off,style:{transition:"stroke-dashoffset 0.7s ease-out"}}),
+            React.createElement("text",{x:sz/2,y:sz/2-2,textAnchor:"middle",fill:color,style:{fontSize:22,fontWeight:800,fontFamily:"'JetBrains Mono', monospace"}},score),
+            React.createElement("text",{x:sz/2,y:sz/2+10,textAnchor:"middle",fill:C.dim,style:{fontSize:9}},"/100")
+          ),
+          React.createElement("div",{style:{fontSize:10,fontWeight:600,color:color,marginTop:2,textAlign:"center"}},label)
+        );
+      }
+
       function ResultsPanel(){
+        const fScore=result.facilite.score;
+        const gScore=result.global;
+        const gCat=getCat(gScore);
+        const gInfo=CATS[gCat];
+        const fColor=fScore>=70?C.green:fScore>=40?C.accent:fScore>0?C.red:C.dim;
+
         return React.createElement("div",{style:{background:C.card,borderRadius:11,border:`1px solid ${C.border}`,padding:16}},
-          React.createElement(ScoreGauge,{score:result.score}),
-          React.createElement("div",{style:{marginTop:12,textAlign:"center"}},
+          // Triple gauges
+          React.createElement("div",{style:{display:"flex",justifyContent:"center",gap:8,marginBottom:8}},
+            React.createElement(MiniGauge,{score:result.score,label:"Prospect",color:catInfo.color,size:95}),
+            React.createElement(MiniGauge,{score:fScore,label:"Facilité",color:fColor,size:95}),
+            React.createElement(MiniGauge,{score:gScore,label:"Global",color:gInfo.color,size:95})
+          ),
+          // Global category
+          React.createElement("div",{style:{textAlign:"center",marginBottom:10}},
+            React.createElement("div",{style:{display:"inline-block",padding:"4px 14px",borderRadius:16,background:`${gInfo.color}18`,border:`1px solid ${gInfo.color}44`,color:gInfo.color,fontWeight:700,fontSize:12}},`${gInfo.icon} ${gCat} — ${gInfo.label}`),
+            React.createElement("div",{style:{fontSize:9,color:C.dim,marginTop:4}},"Global = 60% Prospect + 40% Facilité")
+          ),
+          // Complétude
+          React.createElement("div",{style:{marginTop:8,textAlign:"center"}},
             React.createElement("div",{style:{fontSize:10,color:C.dim,marginBottom:3}},`Complétude: ${result.completude}%`),
             React.createElement("div",{style:{height:4,background:C.border,borderRadius:2,overflow:"hidden",maxWidth:150,margin:"0 auto"}},
               React.createElement("div",{style:{height:"100%",width:`${result.completude}%`,background:result.completude>70?C.green:result.completude>40?C.accent:C.red,borderRadius:2,transition:"width 0.3s"}})
             ),
             result.completude<50&&React.createElement("div",{style:{fontSize:9,color:C.accent,marginTop:3}},"⚠ Score normalisé sur données disponibles")
           ),
+          // Prospect breakdown
+          React.createElement("div",{style:{marginTop:12,fontSize:11,fontWeight:700,color:C.accent,marginBottom:4}},"📊 Score Prospect"),
           React.createElement(Bars,{sections:result.sections}),
-          React.createElement("div",{style:{marginTop:12,padding:10,borderRadius:8,background:`${catInfo.color}11`,border:`1px solid ${catInfo.color}33`}},
-            React.createElement("div",{style:{fontSize:10,fontWeight:700,color:catInfo.color,marginBottom:3,textTransform:"uppercase"}},"Action recommandée"),
-            React.createElement("div",{style:{fontSize:11,color:C.muted,lineHeight:1.5}},catInfo.action)
+          // Facilité breakdown
+          React.createElement("div",{style:{marginTop:12,fontSize:11,fontWeight:700,color:"#22D3EE",marginBottom:4}},"🔧 Score Facilité"),
+          React.createElement(Bars,{sections:result.facilite.sections}),
+          // Action
+          React.createElement("div",{style:{marginTop:12,padding:10,borderRadius:8,background:`${gInfo.color}11`,border:`1px solid ${gInfo.color}33`}},
+            React.createElement("div",{style:{fontSize:10,fontWeight:700,color:gInfo.color,marginBottom:3,textTransform:"uppercase"}},"Action recommandée"),
+            React.createElement("div",{style:{fontSize:11,color:C.muted,lineHeight:1.5}},gInfo.action),
+            fScore>0&&fScore<50&&React.createElement("div",{style:{marginTop:6,fontSize:10,color:"#22D3EE",fontStyle:"italic"}},"⚠ Rénovation préalable probable — prévoir un parcours accompagné avant PV")
           ),
           React.createElement(ROICard,{roi:result.roi}),
           React.createElement(Details,{sections:result.sections}),
           React.createElement("div",{style:{marginTop:14,padding:12,background:C.bg,borderRadius:8}},
-            React.createElement("div",{style:{fontFamily:"'JetBrains Mono', monospace",fontSize:11,color:C.accent,background:C.accentDim,padding:10,borderRadius:7,lineHeight:1.7}},"Score = ( Σ pts_renseignés / Σ max_renseignés ) × 100"),
-            React.createElement("p",{style:{fontSize:10,color:C.dim,marginTop:6,lineHeight:1.5}},"Critères manquants exclus du calcul. Score normalisé sur le max atteignable.")
+            React.createElement("div",{style:{fontFamily:"'JetBrains Mono', monospace",fontSize:11,color:C.accent,background:C.accentDim,padding:10,borderRadius:7,lineHeight:1.7}},"Global = Prospect × 0.6 + Facilité × 0.4"),
+            React.createElement("p",{style:{fontSize:10,color:C.dim,marginTop:6,lineHeight:1.5}},"Chaque score est normalisé indépendamment sur 100. Le score global combine potentiel commercial et faisabilité technique.")
           )
         );
       }
@@ -321,24 +381,26 @@
         // 0: DPE
         ()=>React.createElement(React.Fragment,null,
           React.createElement("h3",{style:{margin:"0 0 14px",fontSize:14,fontWeight:700,color:C.accent}},"⚡ Données DPE"),
+          React.createElement(Sel,{label:"Étiquette DPE",value:data.etiquetteDpe,onChange:s("etiquetteDpe"),options:["A","B","C","D","E","F","G"]}),
           React.createElement(Row,null,
-            React.createElement(Sel,{label:"Étiquette DPE",value:data.etiquetteDpe,onChange:s("etiquetteDpe"),options:["A","B","C","D","E","F","G"]}),
-            React.createElement(Sel,{label:"Énergie chauffage",value:data.energieChauffage,onChange:s("energieChauffage"),options:["Fioul domestique","GPL","Gaz naturel","Électricité","Bois","PAC"]})
+            React.createElement(Sel,{label:"Énergie chauffage",value:data.energieChauffage,onChange:s("energieChauffage"),options:["Fioul domestique","GPL","Gaz naturel","Électricité","Bois","PAC"]}),
+            React.createElement(Sel,{label:"Énergie ECS",value:data.energieECS,onChange:s("energieECS"),options:["Électricité (ballon)","Électricité (thermodynamique)","Fioul domestique","GPL","Gaz naturel","Solaire thermique","Bois","Réseau de chaleur"]})
           ),
           React.createElement(Row,null,
-            React.createElement(Num,{label:"Coût annuel énergie",value:data.coutAnnuel,onChange:s("coutAnnuel"),unit:"€/an",placeholder:"2875"}),
-            React.createElement(Num,{label:"Conso énergie finale",value:data.consoEF,onChange:s("consoEF"),unit:"kWh",placeholder:"18907"})
+            React.createElement(Num,{label:"Coût chauffage",value:data.coutChauffage,onChange:s("coutChauffage"),unit:"€/an",placeholder:"2316"}),
+            React.createElement(Num,{label:"Coût ECS",value:data.coutECS,onChange:s("coutECS"),unit:"€/an",placeholder:"432"})
           ),
-          React.createElement("div",{style:{marginTop:8,padding:9,background:C.accentDim,borderRadius:7,fontSize:10,color:C.accent,lineHeight:1.5}},"💡 Champs du DPE ADEME : etiquette_dpe, type_energie_principale_chauffage, cout_total_5_usages, conso_5_usages_ef")
+          React.createElement(Row,null,
+            React.createElement(Num,{label:"Conso électrique totale",value:data.consoElec,onChange:s("consoElec"),unit:"kWh",placeholder:"364"}),
+            React.createElement(Num,{label:"Conso chauffage fossile",value:data.consoChauffFossile,onChange:s("consoChauffFossile"),unit:"kWh",placeholder:"15629"})
+          ),
+          React.createElement("div",{style:{marginTop:8,padding:9,background:C.accentDim,borderRadius:7,fontSize:10,color:C.accent,lineHeight:1.5}},"💡 Sources DPE : cout_chauffage_energie_n1, cout_ecs_energie_n1/n2, conso_5_usages_ef_energie_n2 (élec), conso_chauffage_ef_energie_n1 (fossile)")
         ),
         // 1: Géo
         ()=>React.createElement(React.Fragment,null,
           React.createElement("h3",{style:{margin:"0 0 14px",fontSize:14,fontWeight:700,color:C.blue}},"📍 Géographie"),
           React.createElement(Sel,{label:"Zone climatique (DPE)",value:data.zoneClimatique,onChange:s("zoneClimatique"),options:["H1a","H1b","H1c","H2a","H2b","H2c","H2d","H3"]}),
-          React.createElement(Row,null,
-            React.createElement(Sel,{label:"Altitude (DPE)",value:data.altitude,onChange:s("altitude"),options:["< 400m","400-800m","> 800m"]}),
-            React.createElement(Sel,{label:"Type de zone",value:data.typeZone,onChange:s("typeZone"),options:["Périurbain","Rural","Urbain dense"]})
-          )
+          React.createElement(Sel,{label:"Altitude (DPE)",value:data.altitude,onChange:s("altitude"),options:["< 400m","400-800m","> 800m"]})
         ),
         // 2: Toiture
         ()=>React.createElement(React.Fragment,null,
@@ -350,9 +412,8 @@
           ),
           React.createElement(Row,null,
             React.createElement(Num,{label:"Surface exploitable",value:data.surfaceToiture,onChange:s("surfaceToiture"),unit:"m²",placeholder:"55"}),
-            React.createElement(Sel,{label:"Ombrage",value:data.ombrage,onChange:s("ombrage"),options:["Aucun","Partiel (arbre, bâtiment)","Important"]})
-          ),
-          React.createElement(Sel,{label:"État de la toiture",value:data.etatToiture,onChange:s("etatToiture"),options:["Bon état","Correct","Mauvais état / à rénover"]})
+            React.createElement(Sel,{label:"État de la toiture",value:data.etatToiture,onChange:s("etatToiture"),options:["Bon état","Correct","Mauvais état / à rénover"]})
+          )
         ),
         // 3: Bâtiment
         ()=>React.createElement(React.Fragment,null,
@@ -367,43 +428,31 @@
           ),
           React.createElement(Sel,{label:"PV existant ?",value:data.pvExistant,onChange:s("pvExistant"),options:["Non","Oui"]})
         ),
-        // 4: Profil
+        // 4: Équipements
         ()=>React.createElement(React.Fragment,null,
-          React.createElement("h3",{style:{margin:"0 0 14px",fontSize:14,fontWeight:700,color:C.green}},"👤 Profil & Équipements"),
-          React.createElement(Row,null,
-            React.createElement(Sel,{label:"Statut occupation",value:data.proprietaire,onChange:s("proprietaire"),options:["Propriétaire occupant","Propriétaire bailleur","Locataire"]}),
-            React.createElement(Sel,{label:"Revenus foyer",value:data.revenus,onChange:s("revenus"),options:["Déciles 1-3","Déciles 4-5","Déciles 6-8","Déciles 9-10"]})
-          ),
-          React.createElement("div",{style:{borderTop:`1px solid ${C.border}`,margin:"14px 0 10px",paddingTop:12}},
-            React.createElement("div",{style:{fontSize:11,fontWeight:700,color:C.blue,marginBottom:8,textTransform:"uppercase",letterSpacing:"0.04em"}},"📊 Données INSEE / IRIS (quartier)"),
-            React.createElement("p",{style:{fontSize:10,color:C.dim,marginBottom:10,lineHeight:1.4}},"Disponibles sur data.insee.fr ou via Filosofi."),
-            React.createElement(Row,null,
-              React.createElement(Num,{label:"Revenu médian IRIS",value:data.revenuMedianIRIS,onChange:s("revenuMedianIRIS"),unit:"€/an",placeholder:"19500"}),
-              React.createElement(Num,{label:"Taux propriétaires IRIS",value:data.tauxProprioIRIS,onChange:s("tauxProprioIRIS"),unit:"%",placeholder:"72"})
-            ),
-            React.createElement(Num,{label:"Part de maisons IRIS",value:data.partMaisonsIRIS,onChange:s("partMaisonsIRIS"),unit:"%",placeholder:"88"})
-          ),
-          React.createElement("div",{style:{borderTop:`1px solid ${C.border}`,marginTop:12,paddingTop:10}},
-            React.createElement("div",{style:labelSt},"Équipements détectés"),
-            React.createElement(Tog,{label:"Piscine",checked:data.piscine,onChange:s("piscine")}),
-            React.createElement(Tog,{label:"Véhicule électrique / Borne",checked:data.vehiculeElec,onChange:s("vehiculeElec")}),
-            React.createElement(Tog,{label:"Climatisation / PAC",checked:data.climatisation,onChange:s("climatisation")})
-          )
+          React.createElement("h3",{style:{margin:"0 0 14px",fontSize:14,fontWeight:700,color:C.green}},"⚙️ Équipements"),
+          React.createElement("p",{style:{fontSize:11,color:C.dim,marginBottom:12,lineHeight:1.5}},"Présence d'équipements énergivores qui augmentent le potentiel d'autoconsommation PV."),
+          React.createElement(Tog,{label:"Climatisation / PAC existante (+2)",checked:data.climatisation,onChange:s("climatisation")}),
+          React.createElement("div",{style:{marginTop:12,padding:9,background:`${C.green}12`,borderRadius:7,fontSize:10,color:C.green,lineHeight:1.5}},"💡 La présence d'une climatisation ou PAC augmente la consommation électrique estivale, période de forte production PV — synergie idéale pour l'autoconsommation.")
         ),
-        // 5: Bonus
+        // 5: Réno (facilité)
+        ()=>React.createElement(React.Fragment,null,
+          React.createElement("h3",{style:{margin:"0 0 14px",fontSize:14,fontWeight:700,color:"#22D3EE"}},"🔧 Facilité d'installation"),
+          React.createElement("p",{style:{fontSize:11,color:C.dim,marginBottom:14,lineHeight:1.5}},"Évalue la complexité des travaux préalables au PV. Plus le score est haut, moins il y a de rénovation nécessaire avant l'installation."),
+          React.createElement("div",{style:{padding:10,background:"rgba(34,211,238,0.08)",border:"1px solid rgba(34,211,238,0.2)",borderRadius:8,marginBottom:14}},
+            React.createElement("div",{style:{fontSize:11,fontWeight:700,color:"#22D3EE",marginBottom:6}},"Logique du scoring inversé"),
+            React.createElement("div",{style:{fontSize:10,color:C.muted,lineHeight:1.6}},"PAC / Élec existant = PV seul suffit → score haut. Fioul / Bois = remplacement chauffage nécessaire → score bas. Isolation insuffisante = rénovation globale avant PV → score bas.")
+          ),
+          React.createElement(Sel,{label:"Qualité isolation enveloppe (DPE)",value:data.qualiteIsolation,onChange:s("qualiteIsolation"),options:["Bonne","Moyenne","Insuffisante","Très insuffisante"]}),
+          React.createElement("div",{style:{marginTop:6,padding:9,background:"rgba(34,211,238,0.08)",borderRadius:7,fontSize:10,color:"#22D3EE",lineHeight:1.5}},"💡 L'énergie chauffage et ECS sont reprises automatiquement depuis l'onglet DPE. Source isolation : qualite_isolation_enveloppe du DPE.")
+        ),
+        // 6: Bonus
         ()=>React.createElement(React.Fragment,null,
           React.createElement("h3",{style:{margin:"0 0 14px",fontSize:14,fontWeight:700,color:C.muted}},"± Bonus / Malus"),
           React.createElement("div",{style:{marginBottom:10}},
             React.createElement("div",{style:{fontSize:10,fontWeight:700,color:C.green,marginBottom:4,textTransform:"uppercase"}},"Bonus"),
-            React.createElement(Tog,{label:"Voisinage avec PV installé (+4)",checked:data.voisinagePV,onChange:s("voisinagePV")}),
             React.createElement(Tog,{label:"Logement traversant (+2)",checked:data.traversant,onChange:s("traversant")}),
-            React.createElement(Tog,{label:"Isolation insuffisante — opportunité (+2)",checked:data.isolationInsuffisante,onChange:s("isolationInsuffisante")}),
-            React.createElement(Tog,{label:"Aides locales disponibles (+3)",checked:data.aidesLocales,onChange:s("aidesLocales")})
-          ),
-          React.createElement("div",{style:{borderTop:`1px solid ${C.border}`,paddingTop:8}},
-            React.createElement("div",{style:{fontSize:10,fontWeight:700,color:C.red,marginBottom:4,textTransform:"uppercase"}},"Malus"),
-            React.createElement(Tog,{label:"Zone ABF / site classé (-8)",checked:data.zoneABF,onChange:s("zoneABF")}),
-            React.createElement(Tog,{label:"Toiture orientée Nord (-10)",checked:data.toitureNord,onChange:s("toitureNord")})
+            React.createElement(Tog,{label:"Isolation insuffisante — opportunité (+2)",checked:data.isolationInsuffisante,onChange:s("isolationInsuffisante")})
           )
         ),
       ];
@@ -415,8 +464,8 @@
             React.createElement("div",{style:{display:"flex",alignItems:"center",gap:10}},
               React.createElement("div",{style:{width:34,height:34,borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center",background:C.accentDim,fontSize:18,border:`1px solid ${C.accent}33`}},"☀️"),
               React.createElement("div",null,
-                React.createElement("h1",{style:{margin:0,fontSize:18,fontWeight:800,letterSpacing:"-0.02em"}},"Scoring Prospect ",React.createElement("span",{style:{color:C.accent}},"PV")," ",React.createElement("span",{style:{fontSize:11,color:C.dim,fontWeight:400}},"v2.0")),
-                React.createElement("p",{style:{margin:0,fontSize:11,color:C.dim}},"DPE enrichi · Toiture · INSEE · ROI")
+                React.createElement("h1",{style:{margin:0,fontSize:18,fontWeight:800,letterSpacing:"-0.02em"}},"Scoring Prospect ",React.createElement("span",{style:{color:C.accent}},"PV")," ",React.createElement("span",{style:{fontSize:11,color:C.dim,fontWeight:400}},"v3.0")),
+                React.createElement("p",{style:{margin:0,fontSize:11,color:C.dim}},"Prospect · Facilité · Global · ROI")
               )
             ),
             React.createElement("div",{style:{display:"flex",gap:6}},
@@ -428,7 +477,7 @@
         // Mobile toggle
         isMobile&&React.createElement("div",{style:{display:"flex",padding:"10px 20px",gap:8,background:C.card,borderBottom:`1px solid ${C.border}`}},
           React.createElement("button",{onClick:()=>setMobileView("form"),style:{flex:1,padding:"10px",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",border:`1px solid ${mobileView==="form"?C.accent+"66":C.border}`,background:mobileView==="form"?C.accentDim:"transparent",color:mobileView==="form"?C.accent:C.muted}},"📝 Données"),
-          React.createElement("button",{onClick:()=>setMobileView("results"),style:{flex:1,padding:"10px",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",border:`1px solid ${mobileView==="results"?catInfo.color+"66":C.border}`,background:mobileView==="results"?`${catInfo.color}15`:"transparent",color:mobileView==="results"?catInfo.color:C.muted}},`${catInfo.icon} Score: ${result.score}/100`)
+          React.createElement("button",{onClick:()=>setMobileView("results"),style:{flex:1,padding:"10px",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",border:`1px solid ${mobileView==="results"?catInfo.color+"66":C.border}`,background:mobileView==="results"?`${catInfo.color}15`:"transparent",color:mobileView==="results"?catInfo.color:C.muted}},`${catInfo.icon} Global: ${result.global}/100`)
         ),
         // Body
         React.createElement("div",{style:{maxWidth:960,margin:"0 auto",padding:"16px 14px"}},
