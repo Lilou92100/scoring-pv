@@ -46,26 +46,33 @@
 
     function scoreDPE(d){
       let pts=0,max=0,details=[];
+      // Étiquette
       const dpeMap={D:10,E:9,C:8,F:7,B:5,G:4,A:2};
       if(d.etiquetteDpe){const v=dpeMap[d.etiquetteDpe]||0;pts+=v;max+=10;details.push({l:`Étiquette ${d.etiquetteDpe}`,p:v,m:10});}
+      // Énergies
       const eMap={"Fioul domestique":6,GPL:5,"Électricité":5,"Gaz naturel":4,Bois:2,PAC:2};
       if(d.energieChauffage){const v=eMap[d.energieChauffage]||0;pts+=v;max+=6;details.push({l:`Chauffage: ${d.energieChauffage}`,p:v,m:6});}
       const ecsMap={"Électricité (ballon)":4,"Électricité (thermodynamique)":3,"Fioul domestique":3,GPL:3,"Gaz naturel":2,"Solaire thermique":1,Bois:1,"Réseau de chaleur":0};
       if(d.energieECS){const v=ecsMap[d.energieECS]??0;pts+=v;max+=4;details.push({l:`ECS: ${d.energieECS}`,p:v,m:4});}
+      // Coûts ventilés
       if(d.coutChauffage!==""){const c=+d.coutChauffage;const v=c>2500?5:c>1500?4:c>800?3:c>300?2:1;pts+=v;max+=5;details.push({l:`Coût chauff. ${c.toLocaleString("fr-FR")} €/an`,p:v,m:5});}
       if(d.coutECS!==""){const c=+d.coutECS;const v=c>500?3:c>250?2:1;pts+=v;max+=3;details.push({l:`Coût ECS ${c.toLocaleString("fr-FR")} €/an`,p:v,m:3});}
+      // Consos ventilées
       if(d.consoElec!==""){const c=+d.consoElec;const v=c>5000?3:c>2000?2:1;pts+=v;max+=3;details.push({l:`Conso élec. ${(c/1000).toFixed(1)}k kWh`,p:v,m:3});}
       if(d.consoChauffFossile!==""){const c=+d.consoChauffFossile;const v=c>15000?3:c>8000?2:1;pts+=v;max+=3;details.push({l:`Conso chauff. fossile ${(c/1000).toFixed(1)}k kWh`,p:v,m:3});}
-      return{pts,max:max||34,details,section:"DPE Enrichi",color:C.accent};
-    }
-
-    function scoreGeo(d){
-      let pts=0,max=0,details=[];
-      const zMap={H3:14,H2d:14,H2c:14,H2b:12,H2a:10,H1c:6,H1b:6,H1a:6};
-      if(d.zoneClimatique){const v=zMap[d.zoneClimatique]||6;pts+=v;max+=14;details.push({l:`Zone ${d.zoneClimatique}`,p:v,m:14});}
-      const aMap={"< 400m":3,"400-800m":2,"> 800m":1};
-      if(d.altitude){const v=aMap[d.altitude]||2;pts+=v;max+=3;details.push({l:`Altitude ${d.altitude}`,p:v,m:3});}
-      return{pts,max:max||17,details,section:"Géographique",color:C.blue};
+      // Localisation
+      const zMap={H3:5,H2d:5,H2c:5,H2b:4,H2a:3,H1c:2,H1b:2,H1a:2};
+      if(d.zoneClimatique){const v=zMap[d.zoneClimatique]||2;pts+=v;max+=5;details.push({l:`Zone ${d.zoneClimatique}`,p:v,m:5});}
+      const aMap={"< 400m":2,"400-800m":1,"> 800m":0};
+      if(d.altitude){const v=aMap[d.altitude]??1;pts+=v;max+=2;details.push({l:`Altitude ${d.altitude}`,p:v,m:2});}
+      // Bâtiment
+      if(d.surface!==""){const s=+d.surface;const v=s>120?5:s>80?4:s>50?3:1;pts+=v;max+=5;details.push({l:`Surface ${s} m²`,p:v,m:5});}
+      const nMap={"1":4,"2":3,"3+":2};
+      if(d.niveaux){const v=nMap[d.niveaux]||2;pts+=v;max+=4;details.push({l:`${d.niveaux} niveau(x)`,p:v,m:4});}
+      const pMap={"Après 1990":4,"1975-1990":3,"1948-1974":2,"Avant 1948":1};
+      if(d.periodeConstruction){const v=pMap[d.periodeConstruction]||2;pts+=v;max+=4;details.push({l:d.periodeConstruction,p:v,m:4});}
+      if(d.pvExistant!==""){const v=d.pvExistant==="Non"?2:-20;pts+=v;max+=2;details.push({l:`PV existant: ${d.pvExistant}`,p:v,m:2});}
+      return{pts,max:max||56,details,section:"DPE & Logement",color:C.accent};
     }
 
     function scoreToiture(d){
@@ -75,33 +82,7 @@
       const iMap={"15-35°":5,"0-15° (plat)":3,"35-45°":3,"> 45°":1};
       if(d.inclinaisonToiture){const v=iMap[d.inclinaisonToiture]||3;pts+=v;max+=5;details.push({l:`Inclinaison ${d.inclinaisonToiture}`,p:v,m:5});}
       if(d.surfaceToiture!==""){const s=+d.surfaceToiture;const v=s>60?4:s>40?3:s>20?2:1;pts+=v;max+=4;details.push({l:`Surface toiture ${s} m²`,p:v,m:4});}
-      if(d.etatToiture){const v=d.etatToiture==="Bon état"?3:d.etatToiture==="Correct"?2:0;pts+=v;max+=3;details.push({l:`État: ${d.etatToiture}`,p:v,m:3});}
-      return{pts,max:max||20,details,section:"Faisabilité Toiture",color:C.cyan};
-    }
-
-    function scoreBatiment(d){
-      let pts=0,max=0,details=[];
-      if(d.typeBatiment){const v=d.typeBatiment==="Maison"?5:0;pts+=v;max+=5;details.push({l:d.typeBatiment,p:v,m:5});}
-      if(d.surface!==""){const s=+d.surface;const v=s>120?5:s>80?4:s>50?3:1;pts+=v;max+=5;details.push({l:`${s} m²`,p:v,m:5});}
-      const nMap={"1":4,"2":3,"3+":2};
-      if(d.niveaux){const v=nMap[d.niveaux]||2;pts+=v;max+=4;details.push({l:`${d.niveaux} niveau(x)`,p:v,m:4});}
-      const pMap={"Après 1990":4,"1975-1990":3,"1948-1974":2,"Avant 1948":1};
-      if(d.periodeConstruction){const v=pMap[d.periodeConstruction]||2;pts+=v;max+=4;details.push({l:d.periodeConstruction,p:v,m:4});}
-      if(d.pvExistant!==""){const v=d.pvExistant==="Non"?2:-20;pts+=v;max+=2;details.push({l:`PV existant: ${d.pvExistant}`,p:v,m:2});}
-      return{pts,max:max||20,details,section:"Bâtiment",color:C.purple};
-    }
-
-    function scoreSocio(d){
-      let pts=0,max=0,details=[];
-      if(d.climatisation){pts+=2;max+=2;details.push({l:"Climatisation / PAC",p:2,m:2});}
-      return{pts,max:max||2,details,section:"Équipements",color:C.green};
-    }
-
-    function scoreBonus(d){
-      let pts=0,details=[];
-      if(d.traversant){pts+=2;details.push({l:"Logement traversant",p:2,m:2});}
-      if(d.isolationInsuffisante){pts+=2;details.push({l:"Isolation insuffisante (opportunité)",p:2,m:2});}
-      return{pts,max:4,details,section:"Bonus / Malus",color:C.dim};
+      return{pts,max:max||17,details,section:"Toiture",color:C.cyan};
     }
 
     // ═══════════ SCORING FACILITÉ ═══════════
@@ -158,18 +139,15 @@
     }
 
     function computeTotal(d){
-      const sections=[scoreDPE(d),scoreGeo(d),scoreToiture(d),scoreBatiment(d),scoreSocio(d),scoreBonus(d)];
+      const sections=[scoreDPE(d),scoreToiture(d)];
       const rawPts=sections.reduce((s,sec)=>s+sec.pts,0);
       const maxR=sections.reduce((s,sec)=>s+sec.max,0);
       const norm=maxR>0?Math.round((rawPts/maxR)*100):0;
       const score=Math.max(0,Math.min(100,norm));
-      const allFields=[d.etiquetteDpe,d.energieChauffage,d.energieECS,d.coutChauffage,d.coutECS,d.consoElec,d.consoChauffFossile,d.zoneClimatique,d.altitude,d.orientationToiture,d.inclinaisonToiture,d.surfaceToiture,d.etatToiture,d.typeBatiment,d.surface,d.niveaux,d.periodeConstruction,d.pvExistant,d.qualiteIsolation];
+      const allFields=[d.etiquetteDpe,d.energieChauffage,d.energieECS,d.coutChauffage,d.coutECS,d.consoElec,d.consoChauffFossile,d.zoneClimatique,d.altitude,d.orientationToiture,d.inclinaisonToiture,d.surfaceToiture,d.surface,d.niveaux,d.periodeConstruction,d.pvExistant,d.qualiteIsolation];
       const filled=allFields.filter(v=>v!==""&&v!==null&&v!==undefined).length;
-      const boolFields=[d.climatisation,d.traversant,d.isolationInsuffisante];
-      const boolFilled=boolFields.some(b=>b)?1:0;
-      const completude=Math.round(((filled+boolFilled)/(allFields.length+1))*100);
+      const completude=Math.round((filled/allFields.length)*100);
       const facilite=scoreFacilite(d);
-      // Global = moyenne pondérée : 60% prospect + 40% facilité
       const global=score>0&&facilite.score>0?Math.round(score*0.6+facilite.score*0.4):score>0?score:facilite.score>0?facilite.score:0;
       return{score,sections,completude,roi:computeROI(d),facilite,global};
     }
@@ -292,9 +270,9 @@
 
     // ═══════════ MAIN ═══════════
 
-    const INIT={etiquetteDpe:"",energieChauffage:"",energieECS:"",coutChauffage:"",coutECS:"",consoElec:"",consoChauffFossile:"",zoneClimatique:"",altitude:"",orientationToiture:"",inclinaisonToiture:"",surfaceToiture:"",etatToiture:"",typeBatiment:"",surface:"",niveaux:"",periodeConstruction:"",pvExistant:"",qualiteIsolation:"",climatisation:false,traversant:false,isolationInsuffisante:false};
+    const INIT={etiquetteDpe:"",energieChauffage:"",energieECS:"",coutChauffage:"",coutECS:"",consoElec:"",consoChauffFossile:"",zoneClimatique:"",altitude:"",orientationToiture:"",inclinaisonToiture:"",surfaceToiture:"",surface:"",niveaux:"",periodeConstruction:"",pvExistant:"",qualiteIsolation:""};
 
-    const EXAMPLE={...INIT,etiquetteDpe:"F",energieChauffage:"Fioul domestique",energieECS:"Fioul domestique",coutChauffage:"2316",coutECS:"432",consoElec:"364",consoChauffFossile:"15629",zoneClimatique:"H2b",altitude:"< 400m",orientationToiture:"Sud-Ouest",inclinaisonToiture:"15-35°",surfaceToiture:"55",etatToiture:"Correct",typeBatiment:"Maison",surface:"81",niveaux:"1",periodeConstruction:"1948-1974",pvExistant:"Non",qualiteIsolation:"Insuffisante",traversant:true,isolationInsuffisante:true};
+    const EXAMPLE={...INIT,etiquetteDpe:"F",energieChauffage:"Fioul domestique",energieECS:"Fioul domestique",coutChauffage:"2316",coutECS:"432",consoElec:"364",consoChauffFossile:"15629",zoneClimatique:"H2b",altitude:"< 400m",orientationToiture:"Sud-Ouest",inclinaisonToiture:"15-35°",surfaceToiture:"55",surface:"81",niveaux:"1",periodeConstruction:"1948-1974",pvExistant:"Non",qualiteIsolation:"Insuffisante"};
 
     function App(){
       const[data,setData]=useState(INIT);
@@ -306,12 +284,7 @@
 
       const tabs=[
         {label:"DPE",icon:"⚡",color:C.accent},
-        {label:"Géo",icon:"📍",color:C.blue},
         {label:"Toiture",icon:"🏗️",color:C.cyan},
-        {label:"Bâtiment",icon:"🏠",color:C.purple},
-        {label:"Équip.",icon:"⚙️",color:C.green},
-        {label:"Réno",icon:"🔧",color:"#22D3EE"},
-        {label:"Bonus",icon:"±",color:C.dim},
       ];
 
       const isMobile=typeof window!=="undefined"&&window.innerWidth<=768;
@@ -378,7 +351,7 @@
       }
 
       const tabContent=[
-        // 0: DPE
+        // 0: DPE & Logement (tout ce qui vient du fichier DPE)
         ()=>React.createElement(React.Fragment,null,
           React.createElement("h3",{style:{margin:"0 0 14px",fontSize:14,fontWeight:700,color:C.accent}},"⚡ Données DPE"),
           React.createElement(Sel,{label:"Étiquette DPE",value:data.etiquetteDpe,onChange:s("etiquetteDpe"),options:["A","B","C","D","E","F","G"]}),
@@ -394,66 +367,30 @@
             React.createElement(Num,{label:"Conso électrique totale",value:data.consoElec,onChange:s("consoElec"),unit:"kWh",placeholder:"364"}),
             React.createElement(Num,{label:"Conso chauffage fossile",value:data.consoChauffFossile,onChange:s("consoChauffFossile"),unit:"kWh",placeholder:"15629"})
           ),
-          React.createElement("div",{style:{marginTop:8,padding:9,background:C.accentDim,borderRadius:7,fontSize:10,color:C.accent,lineHeight:1.5}},"💡 Sources DPE : cout_chauffage_energie_n1, cout_ecs_energie_n1/n2, conso_5_usages_ef_energie_n2 (élec), conso_chauffage_ef_energie_n1 (fossile)")
+          React.createElement(Row,null,
+            React.createElement(Sel,{label:"Zone climatique",value:data.zoneClimatique,onChange:s("zoneClimatique"),options:["H1a","H1b","H1c","H2a","H2b","H2c","H2d","H3"]}),
+            React.createElement(Sel,{label:"Altitude",value:data.altitude,onChange:s("altitude"),options:["< 400m","400-800m","> 800m"]})
+          ),
+          React.createElement(Row,null,
+            React.createElement(Num,{label:"Surface habitable",value:data.surface,onChange:s("surface"),unit:"m²",placeholder:"81"}),
+            React.createElement(Sel,{label:"Niveaux",value:data.niveaux,onChange:s("niveaux"),options:["1","2","3+"]})
+          ),
+          React.createElement(Row,null,
+            React.createElement(Sel,{label:"Période construction",value:data.periodeConstruction,onChange:s("periodeConstruction"),options:["Avant 1948","1948-1974","1975-1990","Après 1990"]}),
+            React.createElement(Sel,{label:"PV existant ?",value:data.pvExistant,onChange:s("pvExistant"),options:["Non","Oui"]})
+          ),
+          React.createElement(Sel,{label:"Qualité isolation enveloppe",value:data.qualiteIsolation,onChange:s("qualiteIsolation"),options:["Bonne","Moyenne","Insuffisante","Très insuffisante"]}),
+          React.createElement("div",{style:{marginTop:8,padding:9,background:C.accentDim,borderRadius:7,fontSize:10,color:C.accent,lineHeight:1.5}},"💡 Toutes ces données proviennent directement du fichier DPE ADEME. La qualité d'isolation alimente le score Facilité.")
         ),
-        // 1: Géo
+        // 1: Toiture (données externes)
         ()=>React.createElement(React.Fragment,null,
-          React.createElement("h3",{style:{margin:"0 0 14px",fontSize:14,fontWeight:700,color:C.blue}},"📍 Géographie"),
-          React.createElement(Sel,{label:"Zone climatique (DPE)",value:data.zoneClimatique,onChange:s("zoneClimatique"),options:["H1a","H1b","H1c","H2a","H2b","H2c","H2d","H3"]}),
-          React.createElement(Sel,{label:"Altitude (DPE)",value:data.altitude,onChange:s("altitude"),options:["< 400m","400-800m","> 800m"]})
-        ),
-        // 2: Toiture
-        ()=>React.createElement(React.Fragment,null,
-          React.createElement("h3",{style:{margin:"0 0 14px",fontSize:14,fontWeight:700,color:C.cyan}},"🏗️ Faisabilité Toiture"),
-          React.createElement("p",{style:{fontSize:11,color:C.dim,marginBottom:12,lineHeight:1.5}},"Estimable via photo aérienne (Google Maps / IGN) ou visite terrain. Alimente aussi le ROI."),
+          React.createElement("h3",{style:{margin:"0 0 14px",fontSize:14,fontWeight:700,color:C.cyan}},"🏗️ Toiture"),
+          React.createElement("p",{style:{fontSize:11,color:C.dim,marginBottom:12,lineHeight:1.5}},"Données estimables via photo aérienne (Google Maps / IGN) ou visite terrain. Alimente aussi le ROI."),
           React.createElement(Row,null,
             React.createElement(Sel,{label:"Orientation principale",value:data.orientationToiture,onChange:s("orientationToiture"),options:["Sud","Sud-Est","Sud-Ouest","Est","Ouest","Nord-Est","Nord-Ouest","Nord"]}),
             React.createElement(Sel,{label:"Inclinaison",value:data.inclinaisonToiture,onChange:s("inclinaisonToiture"),options:["0-15° (plat)","15-35°","35-45°","> 45°"]})
           ),
-          React.createElement(Row,null,
-            React.createElement(Num,{label:"Surface exploitable",value:data.surfaceToiture,onChange:s("surfaceToiture"),unit:"m²",placeholder:"55"}),
-            React.createElement(Sel,{label:"État de la toiture",value:data.etatToiture,onChange:s("etatToiture"),options:["Bon état","Correct","Mauvais état / à rénover"]})
-          )
-        ),
-        // 3: Bâtiment
-        ()=>React.createElement(React.Fragment,null,
-          React.createElement("h3",{style:{margin:"0 0 14px",fontSize:14,fontWeight:700,color:C.purple}},"🏠 Bâtiment"),
-          React.createElement(Row,null,
-            React.createElement(Sel,{label:"Type",value:data.typeBatiment,onChange:s("typeBatiment"),options:["Maison","Appartement"]}),
-            React.createElement(Num,{label:"Surface habitable",value:data.surface,onChange:s("surface"),unit:"m²",placeholder:"81"})
-          ),
-          React.createElement(Row,null,
-            React.createElement(Sel,{label:"Niveaux",value:data.niveaux,onChange:s("niveaux"),options:["1","2","3+"]}),
-            React.createElement(Sel,{label:"Période construction",value:data.periodeConstruction,onChange:s("periodeConstruction"),options:["Avant 1948","1948-1974","1975-1990","Après 1990"]})
-          ),
-          React.createElement(Sel,{label:"PV existant ?",value:data.pvExistant,onChange:s("pvExistant"),options:["Non","Oui"]})
-        ),
-        // 4: Équipements
-        ()=>React.createElement(React.Fragment,null,
-          React.createElement("h3",{style:{margin:"0 0 14px",fontSize:14,fontWeight:700,color:C.green}},"⚙️ Équipements"),
-          React.createElement("p",{style:{fontSize:11,color:C.dim,marginBottom:12,lineHeight:1.5}},"Présence d'équipements énergivores qui augmentent le potentiel d'autoconsommation PV."),
-          React.createElement(Tog,{label:"Climatisation / PAC existante (+2)",checked:data.climatisation,onChange:s("climatisation")}),
-          React.createElement("div",{style:{marginTop:12,padding:9,background:`${C.green}12`,borderRadius:7,fontSize:10,color:C.green,lineHeight:1.5}},"💡 La présence d'une climatisation ou PAC augmente la consommation électrique estivale, période de forte production PV — synergie idéale pour l'autoconsommation.")
-        ),
-        // 5: Réno (facilité)
-        ()=>React.createElement(React.Fragment,null,
-          React.createElement("h3",{style:{margin:"0 0 14px",fontSize:14,fontWeight:700,color:"#22D3EE"}},"🔧 Facilité d'installation"),
-          React.createElement("p",{style:{fontSize:11,color:C.dim,marginBottom:14,lineHeight:1.5}},"Évalue la complexité des travaux préalables au PV. Plus le score est haut, moins il y a de rénovation nécessaire avant l'installation."),
-          React.createElement("div",{style:{padding:10,background:"rgba(34,211,238,0.08)",border:"1px solid rgba(34,211,238,0.2)",borderRadius:8,marginBottom:14}},
-            React.createElement("div",{style:{fontSize:11,fontWeight:700,color:"#22D3EE",marginBottom:6}},"Logique du scoring inversé"),
-            React.createElement("div",{style:{fontSize:10,color:C.muted,lineHeight:1.6}},"PAC / Élec existant = PV seul suffit → score haut. Fioul / Bois = remplacement chauffage nécessaire → score bas. Isolation insuffisante = rénovation globale avant PV → score bas.")
-          ),
-          React.createElement(Sel,{label:"Qualité isolation enveloppe (DPE)",value:data.qualiteIsolation,onChange:s("qualiteIsolation"),options:["Bonne","Moyenne","Insuffisante","Très insuffisante"]}),
-          React.createElement("div",{style:{marginTop:6,padding:9,background:"rgba(34,211,238,0.08)",borderRadius:7,fontSize:10,color:"#22D3EE",lineHeight:1.5}},"💡 L'énergie chauffage et ECS sont reprises automatiquement depuis l'onglet DPE. Source isolation : qualite_isolation_enveloppe du DPE.")
-        ),
-        // 6: Bonus
-        ()=>React.createElement(React.Fragment,null,
-          React.createElement("h3",{style:{margin:"0 0 14px",fontSize:14,fontWeight:700,color:C.muted}},"± Bonus / Malus"),
-          React.createElement("div",{style:{marginBottom:10}},
-            React.createElement("div",{style:{fontSize:10,fontWeight:700,color:C.green,marginBottom:4,textTransform:"uppercase"}},"Bonus"),
-            React.createElement(Tog,{label:"Logement traversant (+2)",checked:data.traversant,onChange:s("traversant")}),
-            React.createElement(Tog,{label:"Isolation insuffisante — opportunité (+2)",checked:data.isolationInsuffisante,onChange:s("isolationInsuffisante")})
-          )
+          React.createElement(Num,{label:"Surface exploitable",value:data.surfaceToiture,onChange:s("surfaceToiture"),unit:"m²",placeholder:"55"})
         ),
       ];
 
