@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Carte Interactive — Points d'Intérêt</title>
+<title>Carte Interactive — PAC & Photovoltaïque</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css"/>
@@ -13,72 +13,24 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', sans-serif; background: #f5f6fa; color: #2d3436; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-  header {
-    background: #fff;
-    border-bottom: 1px solid #e8eaf0;
-    box-shadow: 0 1px 6px rgba(0,0,0,0.07);
-    z-index: 1000;
-    padding: 0 20px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    height: 56px;
-    flex-shrink: 0;
-  }
+  header { background: #fff; border-bottom: 1px solid #e8eaf0; box-shadow: 0 1px 6px rgba(0,0,0,0.07); z-index: 1000; padding: 0 20px; display: flex; align-items: center; gap: 16px; height: 56px; flex-shrink: 0; }
   .logo { font-size: 15px; font-weight: 700; color: #1a1f36; white-space: nowrap; margin-right: 8px; }
   .divider { width: 1px; height: 24px; background: #e8eaf0; flex-shrink: 0; }
   .filters-row { display: flex; align-items: center; gap: 8px; flex: 1; flex-wrap: wrap; }
-  .result-badge {
-    margin-left: auto;
-    font-size: 12px; color: #8892a4;
-    background: #f0f2f8; padding: 4px 12px;
-    border-radius: 20px; white-space: nowrap;
-  }
+  .result-badge { margin-left: auto; font-size: 12px; color: #8892a4; background: #f0f2f8; padding: 4px 12px; border-radius: 20px; white-space: nowrap; }
   .result-badge strong { color: #1a1f36; }
-  .reset-btn {
-    padding: 6px 12px; border: 1.5px solid #e8eaf0;
-    border-radius: 8px; background: #fff;
-    color: #4f6ef7; font-size: 12px; font-weight: 500;
-    cursor: pointer; white-space: nowrap; transition: all .15s;
-  }
+  .reset-btn { padding: 6px 12px; border: 1.5px solid #e8eaf0; border-radius: 8px; background: #fff; color: #4f6ef7; font-size: 12px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: all .15s; }
   .reset-btn:hover { background: #eef1fe; border-color: #4f6ef7; }
 
   .dropdown { position: relative; }
-  .dd-btn {
-    display: flex; align-items: center; gap: 6px;
-    padding: 6px 12px; border-radius: 8px;
-    border: 1.5px solid #e8eaf0; background: #fff;
-    font-size: 13px; color: #1a1f36; cursor: pointer;
-    white-space: nowrap; transition: all .15s; user-select: none;
-  }
+  .dd-btn { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; border: 1.5px solid #e8eaf0; background: #fff; font-size: 13px; color: #1a1f36; cursor: pointer; white-space: nowrap; transition: all .15s; user-select: none; }
   .dd-btn:hover { border-color: #c0c8e0; background: #f8f9fd; }
   .dd-btn.has-filter { border-color: #4f6ef7; background: #eef1fe; color: #3451d1; font-weight: 500; }
   .dd-btn .arrow { font-size: 10px; color: #8892a4; transition: transform .15s; }
   .dd-btn.open .arrow { transform: rotate(180deg); }
-
-  .dd-menu {
-    display: none;
-    position: absolute;
-    top: calc(100% + 6px);
-    left: 0;
-    background: #fff;
-    border: 1.5px solid #e8eaf0;
-    border-radius: 10px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-    padding: 8px;
-    min-width: 190px;
-    z-index: 2000;
-    flex-direction: column;
-    gap: 4px;
-  }
+  .dd-menu { display: none; position: absolute; top: calc(100% + 6px); left: 0; background: #fff; border: 1.5px solid #e8eaf0; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); padding: 8px; min-width: 200px; z-index: 2000; flex-direction: column; gap: 4px; }
   .dd-menu.open { display: flex; }
-
-  .dd-item {
-    display: flex; align-items: center; gap: 8px;
-    padding: 7px 10px; border-radius: 7px;
-    cursor: pointer; font-size: 13px; color: #2d3436;
-    transition: background .1s; user-select: none;
-  }
+  .dd-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 7px; cursor: pointer; font-size: 13px; color: #2d3436; transition: background .1s; user-select: none; }
   .dd-item:hover { background: #f5f6fa; }
   .dd-item.active { background: #eef1fe; color: #3451d1; font-weight: 500; }
   .dd-item .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
@@ -87,61 +39,53 @@
 
   #map { flex: 1; z-index: 1; }
 
-  .popup-content { min-width: 175px; }
-  .popup-content h4 { font-size: 13px; font-weight: 600; margin-bottom: 5px; color: #1a1f36; }
+  .popup-content { min-width: 185px; }
+  .popup-content h4 { font-size: 13px; font-weight: 600; margin-bottom: 4px; color: #1a1f36; }
+  .popup-type-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; margin-bottom: 5px; }
   .popup-content p { font-size: 12px; color: #636e82; margin-bottom: 3px; }
-  .popup-badge {
-    display: inline-block; font-size: 11px;
-    padding: 2px 8px; border-radius: 20px;
-    font-weight: 600; margin-top: 4px;
-  }
-  .popup-select {
-    margin-top: 8px; width: 100%;
-    padding: 5px 8px; border-radius: 6px;
-    border: 1.5px solid #e8eaf0; font-size: 12px;
-    color: #1a1f36; background: #f8f9fd;
-    cursor: pointer; outline: none;
-  }
-  .popup-select:focus { border-color: #4f6ef7; }
+  .popup-badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 600; margin-top: 4px; }
   .popup-infos { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
   .popup-infos p { color: #636e82; }
   .popup-infos span { color: #1a1f36; font-weight: 500; }
+  .popup-select { margin-top: 8px; width: 100%; padding: 5px 8px; border-radius: 6px; border: 1.5px solid #e8eaf0; font-size: 12px; color: #1a1f36; background: #f8f9fd; cursor: pointer; outline: none; }
+  .popup-select:focus { border-color: #4f6ef7; }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">📍 Carte Interactive</div>
+  <div class="logo">⚡ Carte PAC & Photovoltaïque</div>
   <div class="divider"></div>
   <div class="filters-row">
 
-    <div class="dropdown" id="dd-potential">
-      <div class="dd-btn" onclick="toggleDD('potential')">
-        Potentiel <span class="arrow">▼</span>
-      </div>
-      <div class="dd-menu" id="menu-potential">
-        <div class="dd-item active" data-potential="lt3k"><span class="dot" style="background:#74b9ff"></span> &lt; 3 000 <span class="check">✓</span></div>
-        <div class="dd-item active" data-potential="3k6k"><span class="dot" style="background:#55efc4"></span> 3 000 – 6 000 <span class="check">✓</span></div>
-        <div class="dd-item active" data-potential="6k9k"><span class="dot" style="background:#fdcb6e"></span> 6 000 – 9 000 <span class="check">✓</span></div>
-        <div class="dd-item active" data-potential="gt9k"><span class="dot" style="background:#e17055"></span> &gt; 9 000 <span class="check">✓</span></div>
+    <div class="dropdown" id="dd-type">
+      <div class="dd-btn" onclick="toggleDD('type')">Type <span class="arrow">▼</span></div>
+      <div class="dd-menu" id="menu-type">
+        <div class="dd-item active" data-type="pv">☀️ Photovoltaïque <span class="check">✓</span></div>
+        <div class="dd-item active" data-type="pac">❄️ PAC <span class="check">✓</span></div>
       </div>
     </div>
 
-    <div class="dropdown" id="dd-rating">
-      <div class="dd-btn" onclick="toggleDD('rating')">
-        Notation <span class="arrow">▼</span>
+    <div class="dropdown" id="dd-potPV">
+      <div class="dd-btn" onclick="toggleDD('potPV')">Potentiel PV <span class="arrow">▼</span></div>
+      <div class="dd-menu" id="menu-potPV">
+        <div class="dd-item active" data-potpv="3k6k"><span class="dot" style="background:#57aeff"></span> 3 000 – 6 000 <span class="check">✓</span></div>
+        <div class="dd-item active" data-potpv="6k9k"><span class="dot" style="background:#1a7fd4"></span> 6 000 – 9 000 <span class="check">✓</span></div>
+        <div class="dd-item active" data-potpv="gt9k"><span class="dot" style="background:#003f7f"></span> &gt; 9 000 <span class="check">✓</span></div>
       </div>
-      <div class="dd-menu" id="menu-rating">
-        <div class="dd-item active" data-rating="Aplus"><span class="dot" style="background:#6c5ce7"></span> A+ Excellent <span class="check">✓</span></div>
-        <div class="dd-item active" data-rating="A"><span class="dot" style="background:#00b894"></span> A Bon <span class="check">✓</span></div>
-        <div class="dd-item active" data-rating="Aminus"><span class="dot" style="background:#fdcb6e"></span> A− Correct <span class="check">✓</span></div>
+    </div>
+
+    <div class="dropdown" id="dd-potPAC">
+      <div class="dd-btn" onclick="toggleDD('potPAC')">Potentiel PAC <span class="arrow">▼</span></div>
+      <div class="dd-menu" id="menu-potPAC">
+        <div class="dd-item active" data-potpac="gt65"><span class="dot" style="background:#ffcc80"></span> &gt; 65 <span class="check">✓</span></div>
+        <div class="dd-item active" data-potpac="gt75"><span class="dot" style="background:#ef6c00"></span> &gt; 75 <span class="check">✓</span></div>
+        <div class="dd-item active" data-potpac="gt85"><span class="dot" style="background:#7f2600"></span> &gt; 85 <span class="check">✓</span></div>
       </div>
     </div>
 
     <div class="dropdown" id="dd-status">
-      <div class="dd-btn" onclick="toggleDD('status')">
-        Statut <span class="arrow">▼</span>
-      </div>
+      <div class="dd-btn" onclick="toggleDD('status')">Statut <span class="arrow">▼</span></div>
       <div class="dd-menu" id="menu-status">
         <div class="dd-item active" data-status="absent">Absent <span class="check">✓</span></div>
         <div class="dd-item active" data-status="aretirer">À retirer <span class="check">✓</span></div>
@@ -158,40 +102,113 @@
 <div id="map"></div>
 
 <script>
-  const COLORS        = { Aplus:'#6c5ce7', A:'#00b894', Aminus:'#fdcb6e' };
-  const POT_COLORS    = { lt3k:'#74b9ff', '3k6k':'#55efc4', '6k9k':'#fdcb6e', gt9k:'#e17055' };
-  const BADGE_COLORS  = { lt3k:'#2980b9', '3k6k':'#00a381', '6k9k':'#b7860b', gt9k:'#c0392b' };
-  const LABELS        = { lt3k:'< 3 000', '3k6k':'3k – 6k', '6k9k':'6k – 9k', gt9k:'> 9k' };
-  const RATING_LABELS = { Aplus:'A+', A:'A', Aminus:'A−' };
+  const PV_COLORS  = { '3k6k':'#57aeff', '6k9k':'#1a7fd4', gt9k:'#003f7f' };
+  const PV_BADGE   = { '3k6k':'#1a7fd4', '6k9k':'#003f7f', gt9k:'#002655' };
+  const PV_LABELS  = { '3k6k':'3k – 6k', '6k9k':'6k – 9k', gt9k:'> 9k' };
+  const PAC_COLORS = { gt65:'#ffcc80', gt75:'#ef6c00', gt85:'#7f2600' };
+  const PAC_BADGE  = { gt65:'#b34e00', gt75:'#7f2600', gt85:'#4a1500' };
+  const PAC_LABELS = { gt65:'> 65', gt75:'> 75', gt85:'> 85' };
+
+  function generateRandom(n) {
+    const potPVs  = ['3k6k','6k9k','gt9k'];
+    const potPACs = ['gt65','gt75','gt85'];
+    const energies = ['Électricité','Gaz naturel'];
+    const chaufs   = ['Pompe à chaleur','Chaudière gaz','Radiateurs élec.','Plancher chauffant','Climatisation réversible','Chaudière fioul'];
+    const eaux     = ['Chauffe-eau thermodynamique','Ballon gaz','Ballon solaire','Chauffe-eau électrique'];
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      const type = Math.random() < 0.55 ? 'pv' : 'pac';
+      const lat  = 42.3 + Math.random() * 8.5;
+      const lng  = -4.5 + Math.random() * 12.5;
+      const p = {
+        type, lat, lng,
+        name: `Point aléatoire ${i + 1}`,
+        address: `${Math.floor(Math.random() * 200) + 1} Rue de la Paix, France`,
+        energie:   energies[Math.floor(Math.random() * energies.length)],
+        chauffage: chaufs[Math.floor(Math.random() * chaufs.length)],
+        eauChaude: eaux[Math.floor(Math.random() * eaux.length)],
+      };
+      if (type === 'pv') p.potPV  = potPVs[Math.floor(Math.random() * potPVs.length)];
+      else               p.potPAC = potPACs[Math.floor(Math.random() * potPACs.length)];
+      out.push(p);
+    }
+    return out;
+  }
 
   const PLACES = [
-    { name:"Paris 1er",             lat:48.860, lng:2.347,  rating:'Aplus',  potential:'gt9k', address:"Place du Louvre, 75001 Paris",             energie:"Électricité",  chauffage:"Pompe à chaleur",          eauChaude:"Chauffe-eau thermodynamique" },
-    { name:"Lyon Centre",           lat:45.764, lng:4.832,  rating:'Aplus',  potential:'gt9k', address:"Place Bellecour, 69002 Lyon",              energie:"Gaz naturel",  chauffage:"Chaudière gaz",            eauChaude:"Ballon gaz" },
-    { name:"Marseille Vieux-Port",  lat:43.295, lng:5.374,  rating:'A',      potential:'6k9k', address:"Quai du Port, 13002 Marseille",            energie:"Électricité",  chauffage:"Radiateurs élec.",         eauChaude:"Chauffe-eau électrique" },
-    { name:"Bordeaux Chartrons",    lat:44.851, lng:-0.572, rating:'Aplus',  potential:'6k9k', address:"Cours du Médoc, 33300 Bordeaux",           energie:"Gaz naturel",  chauffage:"Chaudière fioul",          eauChaude:"Ballon solaire" },
-    { name:"Toulouse Capitole",     lat:43.604, lng:1.444,  rating:'Aplus',  potential:'6k9k', address:"Place du Capitole, 31000 Toulouse",        energie:"Électricité",  chauffage:"Pompe à chaleur",          eauChaude:"Chauffe-eau thermodynamique" },
-    { name:"Nantes Centre",         lat:47.218, lng:-1.553, rating:'A',      potential:'3k6k', address:"Place du Commerce, 44000 Nantes",          energie:"Gaz naturel",  chauffage:"Chaudière gaz",            eauChaude:"Ballon gaz" },
-    { name:"Rennes République",     lat:48.113, lng:-1.676, rating:'A',      potential:'3k6k', address:"Place de la République, 35000 Rennes",     energie:"Électricité",  chauffage:"Plancher chauffant",       eauChaude:"Chauffe-eau électrique" },
-    { name:"Lille Grand-Place",     lat:50.637, lng:3.063,  rating:'Aminus', potential:'3k6k', address:"Grand Place, 59000 Lille",                 energie:"Gaz naturel",  chauffage:"Chaudière gaz",            eauChaude:"Ballon gaz" },
-    { name:"Strasbourg Cathédrale", lat:48.581, lng:7.751,  rating:'Aplus',  potential:'gt9k', address:"Place de la Cathédrale, 67000 Strasbourg", energie:"Électricité",  chauffage:"Pompe à chaleur",          eauChaude:"Ballon solaire" },
-    { name:"Nice Promenade",        lat:43.696, lng:7.268,  rating:'Aplus',  potential:'gt9k', address:"5 Promenade des Anglais, 06000 Nice",      energie:"Électricité",  chauffage:"Climatisation réversible", eauChaude:"Chauffe-eau thermodynamique" },
-    { name:"Grenoble Centre",       lat:45.188, lng:5.724,  rating:'A',      potential:'3k6k', address:"Place Victor Hugo, 38000 Grenoble",        energie:"Gaz naturel",  chauffage:"Chaudière gaz",            eauChaude:"Ballon gaz" },
-    { name:"Montpellier Comédie",   lat:43.610, lng:3.877,  rating:'A',      potential:'6k9k', address:"Place de la Comédie, 34000 Montpellier",   energie:"Électricité",  chauffage:"Pompe à chaleur",          eauChaude:"Chauffe-eau électrique" },
-    { name:"Dijon Centre",          lat:47.322, lng:5.041,  rating:'Aminus', potential:'lt3k', address:"Place de la Libération, 21000 Dijon",      energie:"Gaz naturel",  chauffage:"Chaudière fioul",          eauChaude:"Ballon gaz" },
-    { name:"Tours Vieux-Tours",     lat:47.394, lng:0.686,  rating:'A',      potential:'lt3k', address:"Place Plumereau, 37000 Tours",             energie:"Électricité",  chauffage:"Radiateurs élec.",         eauChaude:"Chauffe-eau électrique" },
-    { name:"Reims Centre",          lat:49.259, lng:4.032,  rating:'Aminus', potential:'lt3k', address:"Place Drouet d'Erlon, 51100 Reims",        energie:"Gaz naturel",  chauffage:"Chaudière gaz",            eauChaude:"Ballon gaz" },
-    { name:"Clermont-Ferrand",      lat:45.777, lng:3.087,  rating:'Aminus', potential:'lt3k', address:"Place de Jaude, 63000 Clermont-Ferrand",   energie:"Électricité",  chauffage:"Radiateurs élec.",         eauChaude:"Chauffe-eau électrique" },
-    { name:"Amiens Centre",         lat:49.894, lng:2.302,  rating:'Aminus', potential:'lt3k', address:"Place Gambetta, 80000 Amiens",             energie:"Gaz naturel",  chauffage:"Chaudière fioul",          eauChaude:"Ballon gaz" },
-    { name:"Metz Cathédrale",       lat:49.120, lng:6.176,  rating:'A',      potential:'3k6k', address:"Place d'Armes, 57000 Metz",                energie:"Gaz naturel",  chauffage:"Chaudière gaz",            eauChaude:"Ballon solaire" },
-    { name:"Caen Centre",           lat:49.180, lng:-0.371, rating:'Aminus', potential:'lt3k', address:"Place Saint-Pierre, 14000 Caen",           energie:"Électricité",  chauffage:"Radiateurs élec.",         eauChaude:"Chauffe-eau électrique" },
-    { name:"Perpignan",             lat:42.698, lng:2.895,  rating:'A',      potential:'3k6k', address:"Place de la République, 66000 Perpignan",  energie:"Électricité",  chauffage:"Climatisation réversible", eauChaude:"Chauffe-eau thermodynamique" },
+    { type:'pv',  name:'Paris 1er',            lat:48.860, lng:2.347,  potPV:'gt9k',  address:'Place du Louvre, 75001 Paris',             energie:'Électricité', chauffage:'Pompe à chaleur',          eauChaude:'Chauffe-eau thermodynamique' },
+    { type:'pv',  name:'Lyon Centre',           lat:45.764, lng:4.832,  potPV:'gt9k',  address:'Place Bellecour, 69002 Lyon',              energie:'Gaz naturel', chauffage:'Chaudière gaz',            eauChaude:'Ballon gaz' },
+    { type:'pv',  name:'Marseille Vieux-Port',  lat:43.295, lng:5.374,  potPV:'6k9k',  address:'Quai du Port, 13002 Marseille',            energie:'Électricité', chauffage:'Radiateurs élec.',         eauChaude:'Chauffe-eau électrique' },
+    { type:'pv',  name:'Bordeaux Chartrons',    lat:44.851, lng:-0.572, potPV:'6k9k',  address:'Cours du Médoc, 33300 Bordeaux',           energie:'Gaz naturel', chauffage:'Chaudière fioul',          eauChaude:'Ballon solaire' },
+    { type:'pv',  name:'Toulouse Capitole',     lat:43.604, lng:1.444,  potPV:'6k9k',  address:'Place du Capitole, 31000 Toulouse',        energie:'Électricité', chauffage:'Pompe à chaleur',          eauChaude:'Chauffe-eau thermodynamique' },
+    { type:'pv',  name:'Nice Promenade',        lat:43.696, lng:7.268,  potPV:'gt9k',  address:'5 Promenade des Anglais, 06000 Nice',      energie:'Électricité', chauffage:'Climatisation réversible', eauChaude:'Chauffe-eau thermodynamique' },
+    { type:'pv',  name:'Montpellier Comédie',   lat:43.610, lng:3.877,  potPV:'6k9k',  address:'Place de la Comédie, 34000 Montpellier',   energie:'Électricité', chauffage:'Pompe à chaleur',          eauChaude:'Chauffe-eau électrique' },
+    { type:'pv',  name:'Perpignan',             lat:42.698, lng:2.895,  potPV:'3k6k',  address:'Place de la République, 66000 Perpignan',  energie:'Électricité', chauffage:'Climatisation réversible', eauChaude:'Chauffe-eau thermodynamique' },
+    { type:'pv',  name:'Dijon Centre',          lat:47.322, lng:5.041,  potPV:'3k6k',  address:'Place de la Libération, 21000 Dijon',      energie:'Gaz naturel', chauffage:'Chaudière fioul',          eauChaude:'Ballon gaz' },
+    { type:'pv',  name:'Caen Centre',           lat:49.180, lng:-0.371, potPV:'3k6k',  address:'Place Saint-Pierre, 14000 Caen',           energie:'Électricité', chauffage:'Radiateurs élec.',         eauChaude:'Chauffe-eau électrique' },
+    { type:'pac', name:'Strasbourg Cathédrale', lat:48.581, lng:7.751,  potPAC:'gt85', address:'Place de la Cathédrale, 67000 Strasbourg', energie:'Électricité', chauffage:'Pompe à chaleur',          eauChaude:'Ballon solaire' },
+    { type:'pac', name:'Nantes Centre',         lat:47.218, lng:-1.553, potPAC:'gt75', address:'Place du Commerce, 44000 Nantes',          energie:'Gaz naturel', chauffage:'Chaudière gaz',            eauChaude:'Ballon gaz' },
+    { type:'pac', name:'Rennes République',     lat:48.113, lng:-1.676, potPAC:'gt75', address:'Place de la République, 35000 Rennes',     energie:'Électricité', chauffage:'Plancher chauffant',       eauChaude:'Chauffe-eau électrique' },
+    { type:'pac', name:'Lille Grand-Place',     lat:50.637, lng:3.063,  potPAC:'gt65', address:'Grand Place, 59000 Lille',                 energie:'Gaz naturel', chauffage:'Chaudière gaz',            eauChaude:'Ballon gaz' },
+    { type:'pac', name:'Grenoble Centre',       lat:45.188, lng:5.724,  potPAC:'gt75', address:'Place Victor Hugo, 38000 Grenoble',        energie:'Gaz naturel', chauffage:'Chaudière gaz',            eauChaude:'Ballon gaz' },
+    { type:'pac', name:'Metz Cathédrale',       lat:49.120, lng:6.176,  potPAC:'gt65', address:"Place d'Armes, 57000 Metz",                energie:'Gaz naturel', chauffage:'Chaudière gaz',            eauChaude:'Ballon solaire' },
+    { type:'pac', name:'Reims Centre',          lat:49.259, lng:4.032,  potPAC:'gt65', address:"Place Drouet d'Erlon, 51100 Reims",        energie:'Gaz naturel', chauffage:'Chaudière gaz',            eauChaude:'Ballon gaz' },
+    { type:'pac', name:'Clermont-Ferrand',      lat:45.777, lng:3.087,  potPAC:'gt85', address:'Place de Jaude, 63000 Clermont-Ferrand',   energie:'Électricité', chauffage:'Radiateurs élec.',         eauChaude:'Chauffe-eau électrique' },
+    { type:'pac', name:'Amiens Centre',         lat:49.894, lng:2.302,  potPAC:'gt75', address:'Place Gambetta, 80000 Amiens',             energie:'Gaz naturel', chauffage:'Chaudière fioul',          eauChaude:'Ballon gaz' },
+    { type:'pac', name:'Tours Vieux-Tours',     lat:47.394, lng:0.686,  potPAC:'gt65', address:'Place Plumereau, 37000 Tours',             energie:'Électricité', chauffage:'Radiateurs élec.',         eauChaude:'Chauffe-eau électrique' },
+    ...generateRandom(100)
   ];
 
-  const placeStatus    = {};
-  let markers          = [];
-  let activePotentials = new Set(['lt3k','3k6k','6k9k','gt9k']);
-  let activeRatings    = new Set(['Aplus','A','Aminus']);
-  let activeStatuses   = new Set(['absent','aretirer','atraiter','traite']);
+  function makeSunIcon(color) {
+    const r = 9, cx = 18, cy = 18, rOuter = 15;
+    const rays = [0,45,90,135,180,225,270,315].map(deg => {
+      const rad = deg * Math.PI / 180;
+      const x1 = (cx + (r+3) * Math.cos(rad)).toFixed(1), y1 = (cy + (r+3) * Math.sin(rad)).toFixed(1);
+      const x2 = (cx + rOuter * Math.cos(rad)).toFixed(1), y2 = (cy + rOuter * Math.sin(rad)).toFixed(1);
+      return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="2.5" stroke-linecap="round"/>`;
+    }).join('');
+    const svg = `<svg width="36" height="36" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">${rays}<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}" stroke="white" stroke-width="2"/></svg>`;
+    return L.divIcon({ className:'', html:`<div style="width:36px;height:36px;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.3))">${svg}</div>`, iconSize:[36,36], iconAnchor:[18,18], popupAnchor:[0,-20] });
+  }
+
+  function makeSnowIcon(color) {
+    const svg = `<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><polygon points="16,2 30,16 16,30 2,16" fill="${color}" stroke="white" stroke-width="2"/></svg>`;
+    return L.divIcon({ className:'', html:`<div style="width:32px;height:32px;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.3))">${svg}</div>`, iconSize:[32,32], iconAnchor:[16,16], popupAnchor:[0,-18] });
+  }
+
+  const placeStatus  = {};
+  let markers        = [];
+  let activeTypes    = new Set(['pv','pac']);
+  let activePotPV    = new Set(['3k6k','6k9k','gt9k']);
+  let activePotPAC   = new Set(['gt65','gt75','gt85']);
+  let activeStatuses = new Set(['absent','aretirer','atraiter','traite']);
+
+  function buildPopup(p, i) {
+    const status = placeStatus[i] || 'absent';
+    const isPV = p.type === 'pv';
+    const typeColor = isPV ? '#1a7fd4' : '#ef6c00';
+    const typeBg    = isPV ? '#e8f4ff' : '#fff3e0';
+    const potLabel  = isPV ? PV_LABELS[p.potPV]  : PAC_LABELS[p.potPAC];
+    const potColor  = isPV ? PV_COLORS[p.potPV]  : PAC_COLORS[p.potPAC];
+    const potBadge  = isPV ? PV_BADGE[p.potPV]   : PAC_BADGE[p.potPAC];
+    return `<div class="popup-content">
+      <div class="popup-type-badge" style="background:${typeBg};color:${typeColor}">${isPV ? '☀️ Photovoltaïque' : '🔥 PAC'}</div>
+      <h4>${p.name}</h4>
+      <p style="margin-bottom:6px">${p.address}</p>
+      <span class="popup-badge" style="background:${potColor}33;color:${potBadge}">${isPV ? 'Potentiel PV' : 'Potentiel PAC'} : ${potLabel}</span>
+      <div class="popup-infos">
+        <p><span>Énergie principale :</span> ${p.energie}</p>
+        <p><span>Système de chauffage :</span> ${p.chauffage}</p>
+        <p><span>Système d'eau chaude :</span> ${p.eauChaude}</p>
+      </div>
+      <select class="popup-select" onchange="updateStatus(${i}, this.value)">
+        <option value="absent"   ${status==='absent'   ?'selected':''}>Absent</option>
+        <option value="aretirer" ${status==='aretirer' ?'selected':''}>À retirer</option>
+        <option value="atraiter" ${status==='atraiter' ?'selected':''}>À traiter</option>
+        <option value="traite"   ${status==='traite'   ?'selected':''}>Traité</option>
+      </select>
+    </div>`;
+  }
 
   const map = L.map('map', { zoomControl: true }).setView([46.8, 2.5], 6);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
@@ -200,66 +217,35 @@
 
   const clusterGroup = L.markerClusterGroup({
     showCoverageOnHover: false,
-    maxClusterRadius: 50,
+    maxClusterRadius: zoom => {
+      if (zoom <= 6)  return 120;
+      if (zoom <= 8)  return 80;
+      if (zoom <= 10) return 50;
+      return 30;
+    },
+    disableClusteringAtZoom: 13,
     iconCreateFunction: cluster => {
       const n = cluster.getChildCount();
       return L.divIcon({
         className: '',
-        html: `<div style="
-          width:38px;height:38px;border-radius:50%;
-          background:#4f6ef7;color:#fff;
-          display:flex;align-items:center;justify-content:center;
-          font-size:13px;font-weight:700;
-          border:3px solid #fff;
-          box-shadow:0 2px 8px rgba(79,110,247,0.4)
-        ">${n}</div>`,
-        iconSize: [38, 38], iconAnchor: [19, 19]
+        html: `<div style="width:36px;height:36px;border-radius:50%;background:#4f6ef7;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;border:3px solid #fff;box-shadow:0 2px 8px rgba(79,110,247,0.4)">${n}</div>`,
+        iconSize:[36,36], iconAnchor:[18,18]
       });
     }
   });
   map.addLayer(clusterGroup);
-
-  function makeIcon(color) {
-    const svg = `<svg width="28" height="36" viewBox="0 0 28 36" xmlns="http://www.w3.org/2000/svg"><path d="M14 0C6.268 0 0 6.268 0 14c0 9.333 14 22 14 22S28 23.333 28 14C28 6.268 21.732 0 14 0z" fill="${color}" stroke="white" stroke-width="2"/><circle cx="14" cy="14" r="5" fill="white"/></svg>`;
-    return L.divIcon({
-      className: '',
-      html: `<div style="width:28px;height:36px">${svg}</div>`,
-      iconSize: [28, 36], iconAnchor: [14, 36], popupAnchor: [0, -38]
-    });
-  }
-
-  function buildPopup(p, i) {
-    const status = placeStatus[i] || 'absent';
-    return `<div class="popup-content">
-      <h4>${p.name}</h4>
-      <p style="margin-bottom:6px">${p.address}</p>
-      <p style="font-size:13px;font-weight:700;color:#3451d1;margin:4px 0">Notation : ${RATING_LABELS[p.rating]}</p>
-      <span class="popup-badge" style="background:${POT_COLORS[p.potential]}33;color:${BADGE_COLORS[p.potential]}">${LABELS[p.potential]}</span>
-      <div class="popup-infos">
-        <p><span>Énergie principale :</span> ${p.energie}</p>
-        <p><span>Système de chauffage :</span> ${p.chauffage}</p>
-        <p><span>Système d'eau chaude :</span> ${p.eauChaude}</p>
-      </div>
-      <select class="popup-select" onchange="updateStatus(${i}, this.value)">
-        <option value="absent"   ${status==='absent'   ? 'selected' : ''}>Absent</option>
-        <option value="aretirer" ${status==='aretirer' ? 'selected' : ''}>À retirer</option>
-        <option value="atraiter" ${status==='atraiter' ? 'selected' : ''}>À traiter</option>
-        <option value="traite"   ${status==='traite'   ? 'selected' : ''}>Traité</option>
-      </select>
-    </div>`;
-  }
 
   function renderMarkers() {
     clusterGroup.clearLayers();
     markers = [];
     let count = 0;
     PLACES.forEach((p, i) => {
-      if (!activePotentials.has(p.potential)) return;
-      if (!activeRatings.has(p.rating)) return;
-      const status = placeStatus[i] || 'absent';
-      if (!activeStatuses.has(status)) return;
-      const m = L.marker([p.lat, p.lng], { icon: makeIcon(COLORS[p.rating]) })
-        .bindPopup(buildPopup(p, i));
+      if (!activeTypes.has(p.type)) return;
+      if (!activeStatuses.has(placeStatus[i] || 'absent')) return;
+      if (p.type === 'pv'  && !activePotPV.has(p.potPV))   return;
+      if (p.type === 'pac' && !activePotPAC.has(p.potPAC)) return;
+      const icon = p.type === 'pv' ? makeSunIcon(PV_COLORS[p.potPV]) : makeSnowIcon(PAC_COLORS[p.potPAC]);
+      const m = L.marker([p.lat, p.lng], { icon }).bindPopup(buildPopup(p, i));
       clusterGroup.addLayer(m);
       markers.push(m);
       count++;
@@ -267,10 +253,7 @@
     document.getElementById('result-count').innerHTML = `<strong>${count}</strong> résultat(s)`;
   }
 
-  function updateStatus(i, val) {
-    placeStatus[i] = val;
-    renderMarkers();
-  }
+  function updateStatus(i, val) { placeStatus[i] = val; renderMarkers(); }
 
   function toggleDD(name) {
     const menu = document.getElementById('menu-' + name);
@@ -283,55 +266,34 @@
     document.querySelectorAll('.dd-menu').forEach(m => m.classList.remove('open'));
     document.querySelectorAll('.dd-btn').forEach(b => b.classList.remove('open'));
   }
-  document.addEventListener('click', e => {
-    if (!e.target.closest('.dropdown')) closeAllDD();
-  });
+  document.addEventListener('click', e => { if (!e.target.closest('.dropdown')) closeAllDD(); });
 
-  function updateDDBtnState(name, activeSet, allVals) {
-    const btn = document.querySelector('#dd-' + name + ' .dd-btn');
-    btn.classList.toggle('has-filter', activeSet.size < allVals.length);
+  function bindFilter(attr, activeSet, allVals, ddName) {
+    document.querySelectorAll(`[data-${attr}]`).forEach(el => {
+      el.addEventListener('click', e => {
+        e.stopPropagation();
+        const k = el.dataset[attr];
+        if (activeSet.has(k)) { activeSet.delete(k); el.classList.remove('active'); }
+        else { activeSet.add(k); el.classList.add('active'); }
+        document.querySelector(`#dd-${ddName} .dd-btn`).classList.toggle('has-filter', activeSet.size < allVals.length);
+        renderMarkers();
+      });
+    });
   }
 
-  document.querySelectorAll('[data-potential]').forEach(el => {
-    el.addEventListener('click', e => {
-      e.stopPropagation();
-      const k = el.dataset.potential;
-      if (activePotentials.has(k)) { activePotentials.delete(k); el.classList.remove('active'); }
-      else { activePotentials.add(k); el.classList.add('active'); }
-      updateDDBtnState('potential', activePotentials, ['lt3k','3k6k','6k9k','gt9k']);
-      renderMarkers();
-    });
-  });
-
-  document.querySelectorAll('[data-rating]').forEach(el => {
-    el.addEventListener('click', e => {
-      e.stopPropagation();
-      const k = el.dataset.rating;
-      if (activeRatings.has(k)) { activeRatings.delete(k); el.classList.remove('active'); }
-      else { activeRatings.add(k); el.classList.add('active'); }
-      updateDDBtnState('rating', activeRatings, ['Aplus','A','Aminus']);
-      renderMarkers();
-    });
-  });
-
-  document.querySelectorAll('[data-status]').forEach(el => {
-    el.addEventListener('click', e => {
-      e.stopPropagation();
-      const k = el.dataset.status;
-      if (activeStatuses.has(k)) { activeStatuses.delete(k); el.classList.remove('active'); }
-      else { activeStatuses.add(k); el.classList.add('active'); }
-      updateDDBtnState('status', activeStatuses, ['absent','aretirer','atraiter','traite']);
-      renderMarkers();
-    });
-  });
+  bindFilter('type',   activeTypes,    ['pv','pac'],                             'type');
+  bindFilter('potpv',  activePotPV,    ['3k6k','6k9k','gt9k'],                   'potPV');
+  bindFilter('potpac', activePotPAC,   ['gt65','gt75','gt85'],                   'potPAC');
+  bindFilter('status', activeStatuses, ['absent','aretirer','atraiter','traite'], 'status');
 
   function resetFilters() {
-    activePotentials = new Set(['lt3k','3k6k','6k9k','gt9k']);
-    activeRatings    = new Set(['Aplus','A','Aminus']);
-    activeStatuses   = new Set(['absent','aretirer','atraiter','traite']);
-    document.querySelectorAll('[data-potential],[data-rating],[data-status]').forEach(el => el.classList.add('active'));
-    document.querySelectorAll('.dd-btn').forEach(b => b.classList.remove('has-filter'));
-    closeAllDD();
+    activeTypes    = new Set(['pv','pac']);
+    activePotPV    = new Set(['3k6k','6k9k','gt9k']);
+    activePotPAC   = new Set(['gt65','gt75','gt85']);
+    activeStatuses = new Set(['absent','aretirer','atraiter','traite']);
+    document.querySelectorAll('.dd-item').forEach(el => el.classList.add('active'));
+    document.querySelectorAll('.dd-btn').forEach(b => b.classList.remove('has-filter','open'));
+    document.querySelectorAll('.dd-menu').forEach(m => m.classList.remove('open'));
     renderMarkers();
   }
 
