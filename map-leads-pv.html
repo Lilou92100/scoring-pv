@@ -58,39 +58,40 @@
   <div class="divider"></div>
   <div class="filters-row">
 
+    <!-- Tous les data-* en minuscules stricts, IDs aussi -->
     <div class="dropdown" id="dd-type">
       <div class="dd-btn" onclick="toggleDD('type')">Type <span class="arrow">▼</span></div>
       <div class="dd-menu" id="menu-type">
-        <div class="dd-item active" data-type="pv">☀️ Photovoltaïque <span class="check">✓</span></div>
-        <div class="dd-item active" data-type="pac">❄️ PAC <span class="check">✓</span></div>
+        <div class="dd-item active" data-filter="type" data-value="pv">☀️ Photovoltaïque <span class="check">✓</span></div>
+        <div class="dd-item active" data-filter="type" data-value="pac">❄️ PAC <span class="check">✓</span></div>
       </div>
     </div>
 
-    <div class="dropdown" id="dd-potPV">
-      <div class="dd-btn" onclick="toggleDD('potPV')">Potentiel PV <span class="arrow">▼</span></div>
-      <div class="dd-menu" id="menu-potPV">
-        <div class="dd-item active" data-potpv="3k6k"><span class="dot" style="background:#57aeff"></span> 3 000 – 6 000 <span class="check">✓</span></div>
-        <div class="dd-item active" data-potpv="6k9k"><span class="dot" style="background:#1a7fd4"></span> 6 000 – 9 000 <span class="check">✓</span></div>
-        <div class="dd-item active" data-potpv="gt9k"><span class="dot" style="background:#003f7f"></span> &gt; 9 000 <span class="check">✓</span></div>
+    <div class="dropdown" id="dd-potpv">
+      <div class="dd-btn" onclick="toggleDD('potpv')">Potentiel PV <span class="arrow">▼</span></div>
+      <div class="dd-menu" id="menu-potpv">
+        <div class="dd-item active" data-filter="potpv" data-value="3k6k"><span class="dot" style="background:#57aeff"></span> 3 000 – 6 000 <span class="check">✓</span></div>
+        <div class="dd-item active" data-filter="potpv" data-value="6k9k"><span class="dot" style="background:#1a7fd4"></span> 6 000 – 9 000 <span class="check">✓</span></div>
+        <div class="dd-item active" data-filter="potpv" data-value="gt9k"><span class="dot" style="background:#003f7f"></span> &gt; 9 000 <span class="check">✓</span></div>
       </div>
     </div>
 
-    <div class="dropdown" id="dd-potPAC">
-      <div class="dd-btn" onclick="toggleDD('potPAC')">Potentiel PAC <span class="arrow">▼</span></div>
-      <div class="dd-menu" id="menu-potPAC">
-        <div class="dd-item active" data-potpac="gt65"><span class="dot" style="background:#ffcc80"></span> &gt; 65 <span class="check">✓</span></div>
-        <div class="dd-item active" data-potpac="gt75"><span class="dot" style="background:#ef6c00"></span> &gt; 75 <span class="check">✓</span></div>
-        <div class="dd-item active" data-potpac="gt85"><span class="dot" style="background:#7f2600"></span> &gt; 85 <span class="check">✓</span></div>
+    <div class="dropdown" id="dd-potpac">
+      <div class="dd-btn" onclick="toggleDD('potpac')">Potentiel PAC <span class="arrow">▼</span></div>
+      <div class="dd-menu" id="menu-potpac">
+        <div class="dd-item active" data-filter="potpac" data-value="gt65"><span class="dot" style="background:#ffcc80"></span> &gt; 65 <span class="check">✓</span></div>
+        <div class="dd-item active" data-filter="potpac" data-value="gt75"><span class="dot" style="background:#ef6c00"></span> &gt; 75 <span class="check">✓</span></div>
+        <div class="dd-item active" data-filter="potpac" data-value="gt85"><span class="dot" style="background:#7f2600"></span> &gt; 85 <span class="check">✓</span></div>
       </div>
     </div>
 
     <div class="dropdown" id="dd-status">
       <div class="dd-btn" onclick="toggleDD('status')">Statut <span class="arrow">▼</span></div>
       <div class="dd-menu" id="menu-status">
-        <div class="dd-item active" data-status="absent">Absent <span class="check">✓</span></div>
-        <div class="dd-item active" data-status="aretirer">À retirer <span class="check">✓</span></div>
-        <div class="dd-item active" data-status="atraiter">À traiter <span class="check">✓</span></div>
-        <div class="dd-item active" data-status="traite">Traité <span class="check">✓</span></div>
+        <div class="dd-item active" data-filter="status" data-value="absent">Absent <span class="check">✓</span></div>
+        <div class="dd-item active" data-filter="status" data-value="aretirer">À retirer <span class="check">✓</span></div>
+        <div class="dd-item active" data-filter="status" data-value="atraiter">À traiter <span class="check">✓</span></div>
+        <div class="dd-item active" data-filter="status" data-value="traite">Traité <span class="check">✓</span></div>
       </div>
     </div>
 
@@ -102,12 +103,12 @@
 <div id="map"></div>
 
 <script>
-  const PV_COLORS  = { '3k6k':'#57aeff', '6k9k':'#1a7fd4', gt9k:'#003f7f' };
-  const PV_BADGE   = { '3k6k':'#1a7fd4', '6k9k':'#003f7f', gt9k:'#002655' };
-  const PV_LABELS  = { '3k6k':'3k – 6k', '6k9k':'6k – 9k', gt9k:'> 9k' };
-  const PAC_COLORS = { gt65:'#ffcc80', gt75:'#ef6c00', gt85:'#7f2600' };
-  const PAC_BADGE  = { gt65:'#b34e00', gt75:'#7f2600', gt85:'#4a1500' };
-  const PAC_LABELS = { gt65:'> 65', gt75:'> 75', gt85:'> 85' };
+  const PV_COLORS  = { '3k6k':'#57aeff', '6k9k':'#1a7fd4', 'gt9k':'#003f7f' };
+  const PV_BADGE   = { '3k6k':'#1a7fd4', '6k9k':'#003f7f', 'gt9k':'#002655' };
+  const PV_LABELS  = { '3k6k':'3k – 6k', '6k9k':'6k – 9k', 'gt9k':'> 9k' };
+  const PAC_COLORS = { 'gt65':'#ffcc80', 'gt75':'#ef6c00', 'gt85':'#7f2600' };
+  const PAC_BADGE  = { 'gt65':'#b34e00', 'gt75':'#7f2600', 'gt85':'#4a1500' };
+  const PAC_LABELS = { 'gt65':'> 65', 'gt75':'> 75', 'gt85':'> 85' };
 
   const DEPT_BOUNDS = {
     33: { latMin:44.20, latMax:45.30, lngMin:-1.28, lngMax:0.30 },
@@ -184,12 +185,22 @@
     return L.divIcon({ className:'', html:`<div style="width:32px;height:32px;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.3))">${svg}</div>`, iconSize:[32,32], iconAnchor:[16,16], popupAnchor:[0,-18] });
   }
 
-  const placeStatus  = {};
-  let markers        = [];
-  let activeTypes    = new Set(['pv','pac']);
-  let activePotPV    = new Set(['3k6k','6k9k','gt9k']);
-  let activePotPAC   = new Set(['gt65','gt75','gt85']);
-  let activeStatuses = new Set(['absent','aretirer','atraiter','traite']);
+  // ── État des filtres ──────────────────────────────────────
+  const filters = {
+    type:   new Set(['pv','pac']),
+    potpv:  new Set(['3k6k','6k9k','gt9k']),
+    potpac: new Set(['gt65','gt75','gt85']),
+    status: new Set(['absent','aretirer','atraiter','traite']),
+  };
+  const filterAllVals = {
+    type:   ['pv','pac'],
+    potpv:  ['3k6k','6k9k','gt9k'],
+    potpac: ['gt65','gt75','gt85'],
+    status: ['absent','aretirer','atraiter','traite'],
+  };
+
+  const placeStatus = {};
+  let markers = [];
 
   function buildPopup(p, i) {
     const status = placeStatus[i] || 'absent';
@@ -225,18 +236,18 @@
 
   const clusterGroup = L.markerClusterGroup({
     showCoverageOnHover: false,
-    maxClusterRadius: zoom => {
+    maxClusterRadius: function(zoom) {
       if (zoom <= 6)  return 120;
       if (zoom <= 8)  return 80;
       if (zoom <= 10) return 50;
       return 30;
     },
     disableClusteringAtZoom: 13,
-    iconCreateFunction: cluster => {
+    iconCreateFunction: function(cluster) {
       const n = cluster.getChildCount();
       return L.divIcon({
         className: '',
-        html: `<div style="width:36px;height:36px;border-radius:50%;background:#4f6ef7;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;border:3px solid #fff;box-shadow:0 2px 8px rgba(79,110,247,0.4)">${n}</div>`,
+        html: '<div style="width:36px;height:36px;border-radius:50%;background:#4f6ef7;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;border:3px solid #fff;box-shadow:0 2px 8px rgba(79,110,247,0.4)">' + n + '</div>',
         iconSize:[36,36], iconAnchor:[18,18]
       });
     }
@@ -247,61 +258,57 @@
     clusterGroup.clearLayers();
     markers = [];
     let count = 0;
-    PLACES.forEach((p, i) => {
-      if (!activeTypes.has(p.type)) return;
-      if (!activeStatuses.has(placeStatus[i] || 'absent')) return;
-      if (p.type === 'pv'  && !activePotPV.has(p.potPV))   return;
-      if (p.type === 'pac' && !activePotPAC.has(p.potPAC)) return;
-      const icon = p.type === 'pv' ? makeSunIcon(PV_COLORS[p.potPV]) : makeSnowIcon(PAC_COLORS[p.potPAC]);
-      const m = L.marker([p.lat, p.lng], { icon }).bindPopup(buildPopup(p, i));
+    PLACES.forEach(function(p, i) {
+      if (!filters.type.has(p.type)) return;
+      if (!filters.status.has(placeStatus[i] || 'absent')) return;
+      if (p.type === 'pv'  && !filters.potpv.has(p.potPV))   return;
+      if (p.type === 'pac' && !filters.potpac.has(p.potPAC)) return;
+      var icon = p.type === 'pv' ? makeSunIcon(PV_COLORS[p.potPV]) : makeSnowIcon(PAC_COLORS[p.potPAC]);
+      var m = L.marker([p.lat, p.lng], { icon: icon }).bindPopup(buildPopup(p, i));
       clusterGroup.addLayer(m);
       markers.push(m);
       count++;
     });
-    document.getElementById('result-count').innerHTML = `<strong>${count}</strong> résultat(s)`;
+    document.getElementById('result-count').innerHTML = '<strong>' + count + '</strong> résultat(s)';
   }
 
   function updateStatus(i, val) { placeStatus[i] = val; renderMarkers(); }
 
   function toggleDD(name) {
-    const menu = document.getElementById('menu-' + name);
-    const btn  = document.querySelector('#dd-' + name + ' .dd-btn');
-    const isOpen = menu.classList.contains('open');
+    var menu = document.getElementById('menu-' + name);
+    var btn  = document.querySelector('#dd-' + name + ' .dd-btn');
+    var isOpen = menu.classList.contains('open');
     closeAllDD();
     if (!isOpen) { menu.classList.add('open'); btn.classList.add('open'); }
   }
   function closeAllDD() {
-    document.querySelectorAll('.dd-menu').forEach(m => m.classList.remove('open'));
-    document.querySelectorAll('.dd-btn').forEach(b => b.classList.remove('open'));
+    document.querySelectorAll('.dd-menu').forEach(function(m) { m.classList.remove('open'); });
+    document.querySelectorAll('.dd-btn').forEach(function(b) { b.classList.remove('open'); });
   }
-  document.addEventListener('click', e => { if (!e.target.closest('.dropdown')) closeAllDD(); });
+  document.addEventListener('click', function(e) { if (!e.target.closest('.dropdown')) closeAllDD(); });
 
-  function bindFilter(attr, activeSet, allVals, ddName) {
-    document.querySelectorAll(`[data-${attr}]`).forEach(el => {
-      el.addEventListener('click', e => {
-        e.stopPropagation();
-        const k = el.dataset[attr];
-        if (activeSet.has(k)) { activeSet.delete(k); el.classList.remove('active'); }
-        else { activeSet.add(k); el.classList.add('active'); }
-        document.querySelector(`#dd-${ddName} .dd-btn`).classList.toggle('has-filter', activeSet.size < allVals.length);
-        renderMarkers();
-      });
+  // Bind via data-filter + data-value (100% minuscules, sans ambiguïté)
+  document.querySelectorAll('.dd-item').forEach(function(el) {
+    el.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var f = el.getAttribute('data-filter');
+      var v = el.getAttribute('data-value');
+      if (filters[f].has(v)) { filters[f].delete(v); el.classList.remove('active'); }
+      else                   { filters[f].add(v);    el.classList.add('active'); }
+      var btn = document.querySelector('#dd-' + f + ' .dd-btn');
+      if (btn) btn.classList.toggle('has-filter', filters[f].size < filterAllVals[f].length);
+      renderMarkers();
     });
-  }
-
-  bindFilter('type',   activeTypes,    ['pv','pac'],                             'type');
-  bindFilter('potpv',  activePotPV,    ['3k6k','6k9k','gt9k'],                   'potPV');
-  bindFilter('potpac', activePotPAC,   ['gt65','gt75','gt85'],                   'potPAC');
-  bindFilter('status', activeStatuses, ['absent','aretirer','atraiter','traite'], 'status');
+  });
 
   function resetFilters() {
-    activeTypes    = new Set(['pv','pac']);
-    activePotPV    = new Set(['3k6k','6k9k','gt9k']);
-    activePotPAC   = new Set(['gt65','gt75','gt85']);
-    activeStatuses = new Set(['absent','aretirer','atraiter','traite']);
-    document.querySelectorAll('.dd-item').forEach(el => el.classList.add('active'));
-    document.querySelectorAll('.dd-btn').forEach(b => b.classList.remove('has-filter','open'));
-    document.querySelectorAll('.dd-menu').forEach(m => m.classList.remove('open'));
+    filters.type   = new Set(['pv','pac']);
+    filters.potpv  = new Set(['3k6k','6k9k','gt9k']);
+    filters.potpac = new Set(['gt65','gt75','gt85']);
+    filters.status = new Set(['absent','aretirer','atraiter','traite']);
+    document.querySelectorAll('.dd-item').forEach(function(el) { el.classList.add('active'); });
+    document.querySelectorAll('.dd-btn').forEach(function(b) { b.classList.remove('has-filter','open'); });
+    document.querySelectorAll('.dd-menu').forEach(function(m) { m.classList.remove('open'); });
     renderMarkers();
   }
 
