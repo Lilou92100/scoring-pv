@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Carte Interactive — Points d'Intérêt</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #f5f6fa; color: #2d3436; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+  header {
+    background: #fff;
+    border-bottom: 1px solid #e8eaf0;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+    z-index: 1000;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    height: 56px;
+    flex-shrink: 0;
+  }
+  .logo { font-size: 15px; font-weight: 700; color: #1a1f36; white-space: nowrap; margin-right: 8px; }
+  .divider { width: 1px; height: 24px; background: #e8eaf0; flex-shrink: 0; }
+  .filters-row { display: flex; align-items: center; gap: 8px; flex: 1; flex-wrap: wrap; }
+  .result-badge {
+    margin-left: auto;
+    font-size: 12px; color: #8892a4;
+    background: #f0f2f8; padding: 4px 12px;
+    border-radius: 20px; white-space: nowrap;
+  }
+  .result-badge strong { color: #1a1f36; }
+  .reset-btn {
+    padding: 6px 12px; border: 1.5px solid #e8eaf0;
+    border-radius: 8px; background: #fff;
+    color: #4f6ef7; font-size: 12px; font-weight: 500;
+    cursor: pointer; white-space: nowrap; transition: all .15s;
+  }
+  .reset-btn:hover { background: #eef1fe; border-color: #4f6ef7; }
+
+  .dropdown { position: relative; }
+  .dd-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 8px;
+    border: 1.5px solid #e8eaf0; background: #fff;
+    font-size: 13px; color: #1a1f36; cursor: pointer;
+    white-space: nowrap; transition: all .15s; user-select: none;
+  }
+  .dd-btn:hover { border-color: #c0c8e0; background: #f8f9fd; }
+  .dd-btn.has-filter { border-color: #4f6ef7; background: #eef1fe; color: #3451d1; font-weight: 500; }
+  .dd-btn .arrow { font-size: 10px; color: #8892a4; transition: transform .15s; }
+  .dd-btn.open .arrow { transform: rotate(180deg); }
+
+  .dd-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    background: #fff;
+    border: 1.5px solid #e8eaf0;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    padding: 8px;
+    min-width: 190px;
+    z-index: 2000;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .dd-menu.open { display: flex; }
+
+  .dd-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 10px; border-radius: 7px;
+    cursor: pointer; font-size: 13px; color: #2d3436;
+    transition: background .1s; user-select: none;
+  }
+  .dd-item:hover { background: #f5f6fa; }
+  .dd-item.active { background: #eef1fe; color: #3451d1; font-weight: 500; }
+  .dd-item .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .dd-item .check { margin-left: auto; font-size: 12px; opacity: 0; }
+  .dd-item.active .check { opacity: 1; }
+
+  #map { flex: 1; z-index: 1; }
+
+  .popup-content { min-width: 175px; }
+  .popup-content h4 { font-size: 13px; font-weight: 600; margin-bottom: 5px; color: #1a1f36; }
+  .popup-content p { font-size: 12px; color: #636e82; margin-bottom: 3px; }
+  .popup-badge {
+    display: inline-block; font-size: 11px;
+    padding: 2px 8px; border-radius: 20px;
+    font-weight: 600; margin-top: 4px;
+  }
+  .popup-select {
+    margin-top: 8px; width: 100%;
+    padding: 5px 8px; border-radius: 6px;
+    border: 1.5px solid #e8eaf0; font-size: 12px;
+    color: #1a1f36; background: #f8f9fd;
+    cursor: pointer; outline: none;
+  }
+  .popup-select:focus { border-color: #4f6ef7; }
+  .popup-infos { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
+  .popup-infos p { color: #636e82; }
+  .popup-infos span { color: #1a1f36; font-weight: 500; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">📍 Carte Interactive</div>
+  <div class="divider"></div>
+  <div class="filters-row">
+
+    <div class="dropdown" id="dd-potential">
+      <div class="dd-btn" onclick="toggleDD('potential')">
+        Potentiel <span class="arrow">▼</span>
+      </div>
+      <div class="dd-menu" id="menu-potential">
+        <div class="dd-item active" data-potential="lt3k"><span class="dot" style="background:#74b9ff"></span> &lt; 3 000 <span class="check">✓</span></div>
+        <div class="dd-item active" data-potential="3k6k"><span class="dot" style="background:#55efc4"></span> 3 000 – 6 000 <span class="check">✓</span></div>
+        <div class="dd-item active" data-potential="6k9k"><span class="dot" style="background:#fdcb6e"></span> 6 000 – 9 000 <span class="check">✓</span></div>
+        <div class="dd-item active" data-potential="gt9k"><span class="dot" style="background:#e17055"></span> &gt; 9 000 <span class="check">✓</span></div>
+      </div>
+    </div>
+
+    <div class="dropdown" id="dd-rating">
+      <div class="dd-btn" onclick="toggleDD('rating')">
+        Notation <span class="arrow">▼</span>
+      </div>
+      <div class="dd-menu" id="menu-rating">
+        <div class="dd-item active" data-rating="Aplus"><span class="dot" style="background:#6c5ce7"></span> A+ Excellent <span class="check">✓</span></div>
+        <div class="dd-item active" data-rating="A"><span class="dot" style="background:#00b894"></span> A Bon <span class="check">✓</span></div>
+        <div class="dd-item active" data-rating="Aminus"><span class="dot" style="background:#fdcb6e"></span> A− Correct <span class="check">✓</span></div>
+      </div>
+    </div>
+
+    <div class="dropdown" id="dd-status">
+      <div class="dd-btn" onclick="toggleDD('status')">
+        Statut <span class="arrow">▼</span>
+      </div>
+      <div class="dd-menu" id="menu-status">
+        <div class="dd-item active" data-status="absent">Absent <span class="check">✓</span></div>
+        <div class="dd-item active" data-status="aretirer">À retirer <span class="check">✓</span></div>
+        <div class="dd-item active" data-status="atraiter">À traiter <span class="check">✓</span></div>
+        <div class="dd-item active" data-status="traite">Traité <span class="check">✓</span></div>
+      </div>
+    </div>
+
+    <button class="reset-btn" onclick="resetFilters()">↺ Réinitialiser</button>
+    <div class="result-badge" id="result-count"><strong>0</strong> résultat(s)</div>
+  </div>
+</header>
+
+<div id="map"></div>
+
+<script>
+  const COLORS        = { Aplus:'#6c5ce7', A:'#00b894', Aminus:'#fdcb6e' };
+  const POT_COLORS    = { lt3k:'#74b9ff', '3k6k':'#55efc4', '6k9k':'#fdcb6e', gt9k:'#e17055' };
+  const BADGE_COLORS  = { lt3k:'#2980b9', '3k6k':'#00a381', '6k9k':'#b7860b', gt9k:'#c0392b' };
+  const LABELS        = { lt3k:'< 3 000', '3k6k':'3k – 6k', '6k9k':'6k – 9k', gt9k:'> 9k' };
+  const RATING_LABELS = { Aplus:'A+', A:'A', Aminus:'A−' };
+
+  const PLACES = [
+    { name:"Paris 1er",             lat:48.860, lng:2.347,  rating:'Aplus',  potential:'gt9k', address:"Place du Louvre, 75001 Paris",             energie:"Électricité",  chauffage:"Pompe à chaleur",          eauChaude:"Chauffe-eau thermodynamique" },
+    { name:"Lyon Centre",           lat:45.764, lng:4.832,  rating:'Aplus',  potential:'gt9k', address:"Place Bellecour, 69002 Lyon",              energie:"Gaz naturel",  chauffage:"Chaudière gaz",            eauChaude:"Ballon gaz" },
+    { name:"Marseille Vieux-Port",  lat:43.295, lng:5.374,  rating:'A',      potential:'6k9k', address:"Quai du Port, 13002 Marseille",            energie:"Électricité",  chauffage:"Radiateurs élec.",         eauChaude:"Chauffe-eau électrique" },
+    { name:"Bordeaux Chartrons",    lat:44.851, lng:-0.572, rating:'Aplus',  potential:'6k9k', address:"Cours du Médoc, 33300 Bordeaux",           energie:"Gaz naturel",  chauffage:"Chaudière fioul",          eauChaude:"Ballon solaire" },
+    { name:"Toulouse Capitole",     lat:43.604, lng:1.444,  rating:'Aplus',  potential:'6k9k', address:"Place du Capitole, 31000 Toulouse",        energie:"Électricité",  chauffage:"Pompe à chaleur",          eauChaude:"Chauffe-eau thermodynamique" },
+    { name:"Nantes Centre",         lat:47.218, lng:-1.553, rating:'A',      potential:'3k6k', address:"Place du Commerce, 44000 Nantes",          energie:"Gaz naturel",  chauffage:"Chaudière gaz",            eauChaude:"Ballon gaz" },
+    { name:"Rennes République",     lat:48.113, lng:-1.676, rating:'A',      potential:'3k6k', address:"Place de la République, 35000 Rennes",     energie:"Électricité",  chauffage:"Plancher chauffant",       eauChaude:"Chauffe-eau électrique" },
+    { name:"Lille Grand-Place",     lat:50.637, lng:3.063,  rating:'Aminus', potential:'3k6k', address:"Grand Place, 59000 Lille",                 energie:"Gaz naturel",  chauffage:"Chaudière gaz",            eauChaude:"Ballon gaz" },
+    { name:"Strasbourg Cathédrale", lat:48.581, lng:7.751,  rating:'Aplus',  potential:'gt9k', address:"Place de la Cathédrale, 67000 Strasbourg", energie:"Électricité",  chauffage:"Pompe à chaleur",          eauChaude:"Ballon solaire" },
+    { name:"Nice Promenade",        lat:43.696, lng:7.268,  rating:'Aplus',  potential:'gt9k', address:"5 Promenade des Anglais, 06000 Nice",      energie:"Électricité",  chauffage:"Climatisation réversible", eauChaude:"Chauffe-eau thermodynamique" },
+    { name:"Grenoble Centre",       lat:45.188, lng:5.724,  rating:'A',      potential:'3k6k', address:"Place Victor Hugo, 38000 Grenoble",        energie:"Gaz naturel",  chauffage:"Chaudière gaz",            eauChaude:"Ballon gaz" },
+    { name:"Montpellier Comédie",   lat:43.610, lng:3.877,  rating:'A',      potential:'6k9k', address:"Place de la Comédie, 34000 Montpellier",   energie:"Électricité",  chauffage:"Pompe à chaleur",          eauChaude:"Chauffe-eau électrique" },
+    { name:"Dijon Centre",          lat:47.322, lng:5.041,  rating:'Aminus', potential:'lt3k', address:"Place de la Libération, 21000 Dijon",      energie:"Gaz naturel",  chauffage:"Chaudière fioul",          eauChaude:"Ballon gaz" },
+    { name:"Tours Vieux-Tours",     lat:47.394, lng:0.686,  rating:'A',      potential:'lt3k', address:"Place Plumereau, 37000 Tours",             energie:"Électricité",  chauffage:"Radiateurs élec.",         eauChaude:"Chauffe-eau électrique" },
+    { name:"Reims Centre",          lat:49.259, lng:4.032,  rating:'Aminus', potential:'lt3k', address:"Place Drouet d'Erlon, 51100 Reims",        energie:"Gaz naturel",  chauffage:"Chaudière gaz",            eauChaude:"Ballon gaz" },
+    { name:"Clermont-Ferrand",      lat:45.777, lng:3.087,  rating:'Aminus', potential:'lt3k', address:"Place de Jaude, 63000 Clermont-Ferrand",   energie:"Électricité",  chauffage:"Radiateurs élec.",         eauChaude:"Chauffe-eau électrique" },
+    { name:"Amiens Centre",         lat:49.894, lng:2.302,  rating:'Aminus', potential:'lt3k', address:"Place Gambetta, 80000 Amiens",             energie:"Gaz naturel",  chauffage:"Chaudière fioul",          eauChaude:"Ballon gaz" },
+    { name:"Metz Cathédrale",       lat:49.120, lng:6.176,  rating:'A',      potential:'3k6k', address:"Place d'Armes, 57000 Metz",                energie:"Gaz naturel",  chauffage:"Chaudière gaz",            eauChaude:"Ballon solaire" },
+    { name:"Caen Centre",           lat:49.180, lng:-0.371, rating:'Aminus', potential:'lt3k', address:"Place Saint-Pierre, 14000 Caen",           energie:"Électricité",  chauffage:"Radiateurs élec.",         eauChaude:"Chauffe-eau électrique" },
+    { name:"Perpignan",             lat:42.698, lng:2.895,  rating:'A',      potential:'3k6k', address:"Place de la République, 66000 Perpignan",  energie:"Électricité",  chauffage:"Climatisation réversible", eauChaude:"Chauffe-eau thermodynamique" },
+  ];
+
+  const placeStatus    = {};
+  let markers          = [];
+  let activePotentials = new Set(['lt3k','3k6k','6k9k','gt9k']);
+  let activeRatings    = new Set(['Aplus','A','Aminus']);
+  let activeStatuses   = new Set(['absent','aretirer','atraiter','traite']);
+
+  const map = L.map('map', { zoomControl: true }).setView([46.8, 2.5], 6);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap © CartoDB', maxZoom: 19
+  }).addTo(map);
+
+  const clusterGroup = L.markerClusterGroup({
+    showCoverageOnHover: false,
+    maxClusterRadius: 50,
+    iconCreateFunction: cluster => {
+      const n = cluster.getChildCount();
+      return L.divIcon({
+        className: '',
+        html: `<div style="
+          width:38px;height:38px;border-radius:50%;
+          background:#4f6ef7;color:#fff;
+          display:flex;align-items:center;justify-content:center;
+          font-size:13px;font-weight:700;
+          border:3px solid #fff;
+          box-shadow:0 2px 8px rgba(79,110,247,0.4)
+        ">${n}</div>`,
+        iconSize: [38, 38], iconAnchor: [19, 19]
+      });
+    }
+  });
+  map.addLayer(clusterGroup);
+
+  function makeIcon(color) {
+    const svg = `<svg width="28" height="36" viewBox="0 0 28 36" xmlns="http://www.w3.org/2000/svg"><path d="M14 0C6.268 0 0 6.268 0 14c0 9.333 14 22 14 22S28 23.333 28 14C28 6.268 21.732 0 14 0z" fill="${color}" stroke="white" stroke-width="2"/><circle cx="14" cy="14" r="5" fill="white"/></svg>`;
+    return L.divIcon({
+      className: '',
+      html: `<div style="width:28px;height:36px">${svg}</div>`,
+      iconSize: [28, 36], iconAnchor: [14, 36], popupAnchor: [0, -38]
+    });
+  }
+
+  function buildPopup(p, i) {
+    const status = placeStatus[i] || 'absent';
+    return `<div class="popup-content">
+      <h4>${p.name}</h4>
+      <p style="margin-bottom:6px">${p.address}</p>
+      <p style="font-size:13px;font-weight:700;color:#3451d1;margin:4px 0">Notation : ${RATING_LABELS[p.rating]}</p>
+      <span class="popup-badge" style="background:${POT_COLORS[p.potential]}33;color:${BADGE_COLORS[p.potential]}">${LABELS[p.potential]}</span>
+      <div class="popup-infos">
+        <p><span>Énergie principale :</span> ${p.energie}</p>
+        <p><span>Système de chauffage :</span> ${p.chauffage}</p>
+        <p><span>Système d'eau chaude :</span> ${p.eauChaude}</p>
+      </div>
+      <select class="popup-select" onchange="updateStatus(${i}, this.value)">
+        <option value="absent"   ${status==='absent'   ? 'selected' : ''}>Absent</option>
+        <option value="aretirer" ${status==='aretirer' ? 'selected' : ''}>À retirer</option>
+        <option value="atraiter" ${status==='atraiter' ? 'selected' : ''}>À traiter</option>
+        <option value="traite"   ${status==='traite'   ? 'selected' : ''}>Traité</option>
+      </select>
+    </div>`;
+  }
+
+  function renderMarkers() {
+    clusterGroup.clearLayers();
+    markers = [];
+    let count = 0;
+    PLACES.forEach((p, i) => {
+      if (!activePotentials.has(p.potential)) return;
+      if (!activeRatings.has(p.rating)) return;
+      const status = placeStatus[i] || 'absent';
+      if (!activeStatuses.has(status)) return;
+      const m = L.marker([p.lat, p.lng], { icon: makeIcon(COLORS[p.rating]) })
+        .bindPopup(buildPopup(p, i));
+      clusterGroup.addLayer(m);
+      markers.push(m);
+      count++;
+    });
+    document.getElementById('result-count').innerHTML = `<strong>${count}</strong> résultat(s)`;
+  }
+
+  function updateStatus(i, val) {
+    placeStatus[i] = val;
+    renderMarkers();
+  }
+
+  function toggleDD(name) {
+    const menu = document.getElementById('menu-' + name);
+    const btn  = document.querySelector('#dd-' + name + ' .dd-btn');
+    const isOpen = menu.classList.contains('open');
+    closeAllDD();
+    if (!isOpen) { menu.classList.add('open'); btn.classList.add('open'); }
+  }
+  function closeAllDD() {
+    document.querySelectorAll('.dd-menu').forEach(m => m.classList.remove('open'));
+    document.querySelectorAll('.dd-btn').forEach(b => b.classList.remove('open'));
+  }
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.dropdown')) closeAllDD();
+  });
+
+  function updateDDBtnState(name, activeSet, allVals) {
+    const btn = document.querySelector('#dd-' + name + ' .dd-btn');
+    btn.classList.toggle('has-filter', activeSet.size < allVals.length);
+  }
+
+  document.querySelectorAll('[data-potential]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const k = el.dataset.potential;
+      if (activePotentials.has(k)) { activePotentials.delete(k); el.classList.remove('active'); }
+      else { activePotentials.add(k); el.classList.add('active'); }
+      updateDDBtnState('potential', activePotentials, ['lt3k','3k6k','6k9k','gt9k']);
+      renderMarkers();
+    });
+  });
+
+  document.querySelectorAll('[data-rating]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const k = el.dataset.rating;
+      if (activeRatings.has(k)) { activeRatings.delete(k); el.classList.remove('active'); }
+      else { activeRatings.add(k); el.classList.add('active'); }
+      updateDDBtnState('rating', activeRatings, ['Aplus','A','Aminus']);
+      renderMarkers();
+    });
+  });
+
+  document.querySelectorAll('[data-status]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const k = el.dataset.status;
+      if (activeStatuses.has(k)) { activeStatuses.delete(k); el.classList.remove('active'); }
+      else { activeStatuses.add(k); el.classList.add('active'); }
+      updateDDBtnState('status', activeStatuses, ['absent','aretirer','atraiter','traite']);
+      renderMarkers();
+    });
+  });
+
+  function resetFilters() {
+    activePotentials = new Set(['lt3k','3k6k','6k9k','gt9k']);
+    activeRatings    = new Set(['Aplus','A','Aminus']);
+    activeStatuses   = new Set(['absent','aretirer','atraiter','traite']);
+    document.querySelectorAll('[data-potential],[data-rating],[data-status]').forEach(el => el.classList.add('active'));
+    document.querySelectorAll('.dd-btn').forEach(b => b.classList.remove('has-filter'));
+    closeAllDD();
+    renderMarkers();
+  }
+
+  renderMarkers();
+</script>
+</body>
+</html>
