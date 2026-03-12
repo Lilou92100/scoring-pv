@@ -109,7 +109,13 @@
   const PAC_BADGE  = { gt65:'#b34e00', gt75:'#7f2600', gt85:'#4a1500' };
   const PAC_LABELS = { gt65:'> 65', gt75:'> 75', gt85:'> 85' };
 
+  const DEPT_BOUNDS = {
+    33: { latMin:44.20, latMax:45.30, lngMin:-1.28, lngMax:0.30 },
+    40: { latMin:43.48, latMax:44.52, lngMin:-1.55, lngMax:0.05 },
+  };
+
   function generateRandom(n) {
+    const depts   = [33, 40];
     const potPVs  = ['3k6k','6k9k','gt9k'];
     const potPACs = ['gt65','gt75','gt85'];
     const energies = ['Électricité','Gaz naturel'];
@@ -117,13 +123,15 @@
     const eaux     = ['Chauffe-eau thermodynamique','Ballon gaz','Ballon solaire','Chauffe-eau électrique'];
     const out = [];
     for (let i = 0; i < n; i++) {
+      const dept = depts[Math.floor(Math.random() * depts.length)];
+      const b    = DEPT_BOUNDS[dept];
       const type = Math.random() < 0.55 ? 'pv' : 'pac';
-      const lat  = 42.3 + Math.random() * 8.5;
-      const lng  = -4.5 + Math.random() * 12.5;
       const p = {
-        type, lat, lng,
-        name: `Point aléatoire ${i + 1}`,
-        address: `${Math.floor(Math.random() * 200) + 1} Rue de la Paix, France`,
+        type,
+        lat: b.latMin + Math.random() * (b.latMax - b.latMin),
+        lng: b.lngMin + Math.random() * (b.lngMax - b.lngMin),
+        name: `Point ${dept}-${i + 1}`,
+        address: `Département ${dept}, France`,
         energie:   energies[Math.floor(Math.random() * energies.length)],
         chauffage: chaufs[Math.floor(Math.random() * chaufs.length)],
         eauChaude: eaux[Math.floor(Math.random() * eaux.length)],
@@ -156,7 +164,7 @@
     { type:'pac', name:'Clermont-Ferrand',      lat:45.777, lng:3.087,  potPAC:'gt85', address:'Place de Jaude, 63000 Clermont-Ferrand',   energie:'Électricité', chauffage:'Radiateurs élec.',         eauChaude:'Chauffe-eau électrique' },
     { type:'pac', name:'Amiens Centre',         lat:49.894, lng:2.302,  potPAC:'gt75', address:'Place Gambetta, 80000 Amiens',             energie:'Gaz naturel', chauffage:'Chaudière fioul',          eauChaude:'Ballon gaz' },
     { type:'pac', name:'Tours Vieux-Tours',     lat:47.394, lng:0.686,  potPAC:'gt65', address:'Place Plumereau, 37000 Tours',             energie:'Électricité', chauffage:'Radiateurs élec.',         eauChaude:'Chauffe-eau électrique' },
-    ...generateRandom(100)
+    ...generateRandom(200)
   ];
 
   function makeSunIcon(color) {
@@ -210,7 +218,7 @@
     </div>`;
   }
 
-  const map = L.map('map', { zoomControl: true }).setView([46.8, 2.5], 6);
+  const map = L.map('map', { zoomControl: true }).setView([44.5, -0.5], 8);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
     attribution: '© OpenStreetMap © CartoDB', maxZoom: 19
   }).addTo(map);
