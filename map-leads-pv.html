@@ -28,7 +28,7 @@
   .dd-btn.has-filter { border-color: #4f6ef7; background: #eef1fe; color: #3451d1; font-weight: 500; }
   .dd-btn .arrow { font-size: 10px; color: #8892a4; transition: transform .15s; }
   .dd-btn.open .arrow { transform: rotate(180deg); }
-  .dd-menu { display: none; position: absolute; top: calc(100% + 6px); left: 0; background: #fff; border: 1.5px solid #e8eaf0; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); padding: 8px; min-width: 200px; z-index: 2000; flex-direction: column; gap: 4px; }
+  .dd-menu { display: none; position: absolute; top: calc(100% + 6px); left: 0; background: #fff; border: 1.5px solid #e8eaf0; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); padding: 8px; min-width: 210px; z-index: 2000; flex-direction: column; gap: 4px; }
   .dd-menu.open { display: flex; }
   .dd-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 7px; cursor: pointer; font-size: 13px; color: #2d3436; transition: background .1s; user-select: none; }
   .dd-item:hover { background: #f5f6fa; }
@@ -36,6 +36,12 @@
   .dd-item .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
   .dd-item .check { margin-left: auto; font-size: 12px; opacity: 0; }
   .dd-item.active .check { opacity: 1; }
+  .dd-item .dept-num { font-weight: 700; width: 26px; flex-shrink: 0; }
+
+  /* Boutons select all / none dans le menu département */
+  .dd-actions { display: flex; gap: 6px; padding: 4px 10px 8px; }
+  .dd-action-btn { flex: 1; padding: 4px 0; font-size: 11px; border: 1.5px solid #e8eaf0; border-radius: 6px; background: #f8f9fd; color: #4f6ef7; cursor: pointer; font-weight: 500; transition: background .1s; }
+  .dd-action-btn:hover { background: #eef1fe; }
 
   #map { flex: 1; z-index: 1; }
 
@@ -58,7 +64,6 @@
   <div class="divider"></div>
   <div class="filters-row">
 
-    <!-- Tous les data-* en minuscules stricts, IDs aussi -->
     <div class="dropdown" id="dd-type">
       <div class="dd-btn" onclick="toggleDD('type')">Type <span class="arrow">▼</span></div>
       <div class="dd-menu" id="menu-type">
@@ -85,6 +90,25 @@
       </div>
     </div>
 
+    <div class="dropdown" id="dd-dept">
+      <div class="dd-btn" onclick="toggleDD('dept')">Département <span class="arrow">▼</span></div>
+      <div class="dd-menu" id="menu-dept">
+        <div class="dd-actions">
+          <button class="dd-action-btn" onclick="selectAllDepts(event)">Tout sélect.</button>
+          <button class="dd-action-btn" onclick="selectNoneDepts(event)">Tout désélect.</button>
+        </div>
+        <div class="dd-item active" data-filter="dept" data-value="16"><span class="dept-num">16</span> Charente <span class="check">✓</span></div>
+        <div class="dd-item active" data-filter="dept" data-value="17"><span class="dept-num">17</span> Charente-Maritime <span class="check">✓</span></div>
+        <div class="dd-item active" data-filter="dept" data-value="24"><span class="dept-num">24</span> Dordogne <span class="check">✓</span></div>
+        <div class="dd-item active" data-filter="dept" data-value="33"><span class="dept-num">33</span> Gironde <span class="check">✓</span></div>
+        <div class="dd-item active" data-filter="dept" data-value="40"><span class="dept-num">40</span> Landes <span class="check">✓</span></div>
+        <div class="dd-item active" data-filter="dept" data-value="47"><span class="dept-num">47</span> Lot-et-Garonne <span class="check">✓</span></div>
+        <div class="dd-item active" data-filter="dept" data-value="64"><span class="dept-num">64</span> Pyrénées-Atlantiques <span class="check">✓</span></div>
+        <div class="dd-item active" data-filter="dept" data-value="79"><span class="dept-num">79</span> Deux-Sèvres <span class="check">✓</span></div>
+        <div class="dd-item active" data-filter="dept" data-value="85"><span class="dept-num">85</span> Vendée <span class="check">✓</span></div>
+      </div>
+    </div>
+
     <div class="dropdown" id="dd-status">
       <div class="dd-btn" onclick="toggleDD('status')">Statut <span class="arrow">▼</span></div>
       <div class="dd-menu" id="menu-status">
@@ -103,36 +127,46 @@
 <div id="map"></div>
 
 <script>
-  const PV_COLORS  = { '3k6k':'#57aeff', '6k9k':'#1a7fd4', 'gt9k':'#003f7f' };
-  const PV_BADGE   = { '3k6k':'#1a7fd4', '6k9k':'#003f7f', 'gt9k':'#002655' };
-  const PV_LABELS  = { '3k6k':'3k – 6k', '6k9k':'6k – 9k', 'gt9k':'> 9k' };
-  const PAC_COLORS = { 'gt65':'#ffcc80', 'gt75':'#ef6c00', 'gt85':'#7f2600' };
-  const PAC_BADGE  = { 'gt65':'#b34e00', 'gt75':'#7f2600', 'gt85':'#4a1500' };
-  const PAC_LABELS = { 'gt65':'> 65', 'gt75':'> 75', 'gt85':'> 85' };
+  var PV_COLORS  = { '3k6k':'#57aeff', '6k9k':'#1a7fd4', 'gt9k':'#003f7f' };
+  var PV_BADGE   = { '3k6k':'#1a7fd4', '6k9k':'#003f7f', 'gt9k':'#002655' };
+  var PV_LABELS  = { '3k6k':'3k – 6k', '6k9k':'6k – 9k', 'gt9k':'> 9k' };
+  var PAC_COLORS = { 'gt65':'#ffcc80', 'gt75':'#ef6c00', 'gt85':'#7f2600' };
+  var PAC_BADGE  = { 'gt65':'#b34e00', 'gt75':'#7f2600', 'gt85':'#4a1500' };
+  var PAC_LABELS = { 'gt65':'> 65', 'gt75':'> 75', 'gt85':'> 85' };
 
-  const DEPT_BOUNDS = {
-    33: { latMin:44.20, latMax:45.30, lngMin:-1.28, lngMax:0.30 },
-    40: { latMin:43.48, latMax:44.52, lngMin:-1.55, lngMax:0.05 },
+  // Boîtes englobantes par département
+  var DEPT_BOUNDS = {
+    '16': { latMin:45.18, latMax:46.08, lngMin:-0.48, lngMax:0.60 },
+    '17': { latMin:45.10, latMax:46.08, lngMin:-1.55, lngMax:-0.10 },
+    '24': { latMin:44.35, latMax:45.40, lngMin:0.22,  lngMax:1.55 },
+    '33': { latMin:44.20, latMax:45.30, lngMin:-1.28, lngMax:0.30 },
+    '40': { latMin:43.48, latMax:44.52, lngMin:-1.55, lngMax:0.05 },
+    '47': { latMin:43.90, latMax:44.70, lngMin:0.10,  lngMax:1.20 },
+    '64': { latMin:43.00, latMax:43.80, lngMin:-1.78, lngMax:0.10 },
+    '79': { latMin:46.10, latMax:47.00, lngMin:-0.75, lngMax:0.30 },
+    '85': { latMin:46.30, latMax:47.10, lngMin:-2.00, lngMax:-0.55 },
   };
 
+  var ALL_DEPTS = ['16','17','24','33','40','47','64','79','85'];
+
   function generateRandom(n) {
-    const depts   = [33, 40];
-    const potPVs  = ['3k6k','6k9k','gt9k'];
-    const potPACs = ['gt65','gt75','gt85'];
-    const energies = ['Électricité','Gaz naturel'];
-    const chaufs   = ['Pompe à chaleur','Chaudière gaz','Radiateurs élec.','Plancher chauffant','Climatisation réversible','Chaudière fioul'];
-    const eaux     = ['Chauffe-eau thermodynamique','Ballon gaz','Ballon solaire','Chauffe-eau électrique'];
-    const out = [];
-    for (let i = 0; i < n; i++) {
-      const dept = depts[Math.floor(Math.random() * depts.length)];
-      const b    = DEPT_BOUNDS[dept];
-      const type = Math.random() < 0.55 ? 'pv' : 'pac';
-      const p = {
-        type,
+    var potPVs  = ['3k6k','6k9k','gt9k'];
+    var potPACs = ['gt65','gt75','gt85'];
+    var energies = ['Électricité','Gaz naturel'];
+    var chaufs   = ['Pompe à chaleur','Chaudière gaz','Radiateurs élec.','Plancher chauffant','Climatisation réversible','Chaudière fioul'];
+    var eaux     = ['Chauffe-eau thermodynamique','Ballon gaz','Ballon solaire','Chauffe-eau électrique'];
+    var out = [];
+    for (var i = 0; i < n; i++) {
+      var dept = ALL_DEPTS[Math.floor(Math.random() * ALL_DEPTS.length)];
+      var b    = DEPT_BOUNDS[dept];
+      var type = Math.random() < 0.55 ? 'pv' : 'pac';
+      var p = {
+        type: type,
+        dept: dept,
         lat: b.latMin + Math.random() * (b.latMax - b.latMin),
         lng: b.lngMin + Math.random() * (b.lngMax - b.lngMin),
-        name: `Point ${dept}-${i + 1}`,
-        address: `Département ${dept}, France`,
+        name: 'Point ' + dept + '-' + (i + 1),
+        address: 'Département ' + dept + ', France',
         energie:   energies[Math.floor(Math.random() * energies.length)],
         chauffage: chaufs[Math.floor(Math.random() * chaufs.length)],
         eauChaude: eaux[Math.floor(Math.random() * eaux.length)],
@@ -144,97 +178,89 @@
     return out;
   }
 
-  const PLACES = [
-    { type:'pv',  name:'Paris 1er',            lat:48.860, lng:2.347,  potPV:'gt9k',  address:'Place du Louvre, 75001 Paris',             energie:'Électricité', chauffage:'Pompe à chaleur',          eauChaude:'Chauffe-eau thermodynamique' },
-    { type:'pv',  name:'Lyon Centre',           lat:45.764, lng:4.832,  potPV:'gt9k',  address:'Place Bellecour, 69002 Lyon',              energie:'Gaz naturel', chauffage:'Chaudière gaz',            eauChaude:'Ballon gaz' },
-    { type:'pv',  name:'Marseille Vieux-Port',  lat:43.295, lng:5.374,  potPV:'6k9k',  address:'Quai du Port, 13002 Marseille',            energie:'Électricité', chauffage:'Radiateurs élec.',         eauChaude:'Chauffe-eau électrique' },
-    { type:'pv',  name:'Bordeaux Chartrons',    lat:44.851, lng:-0.572, potPV:'6k9k',  address:'Cours du Médoc, 33300 Bordeaux',           energie:'Gaz naturel', chauffage:'Chaudière fioul',          eauChaude:'Ballon solaire' },
-    { type:'pv',  name:'Toulouse Capitole',     lat:43.604, lng:1.444,  potPV:'6k9k',  address:'Place du Capitole, 31000 Toulouse',        energie:'Électricité', chauffage:'Pompe à chaleur',          eauChaude:'Chauffe-eau thermodynamique' },
-    { type:'pv',  name:'Nice Promenade',        lat:43.696, lng:7.268,  potPV:'gt9k',  address:'5 Promenade des Anglais, 06000 Nice',      energie:'Électricité', chauffage:'Climatisation réversible', eauChaude:'Chauffe-eau thermodynamique' },
-    { type:'pv',  name:'Montpellier Comédie',   lat:43.610, lng:3.877,  potPV:'6k9k',  address:'Place de la Comédie, 34000 Montpellier',   energie:'Électricité', chauffage:'Pompe à chaleur',          eauChaude:'Chauffe-eau électrique' },
-    { type:'pv',  name:'Perpignan',             lat:42.698, lng:2.895,  potPV:'3k6k',  address:'Place de la République, 66000 Perpignan',  energie:'Électricité', chauffage:'Climatisation réversible', eauChaude:'Chauffe-eau thermodynamique' },
-    { type:'pv',  name:'Dijon Centre',          lat:47.322, lng:5.041,  potPV:'3k6k',  address:'Place de la Libération, 21000 Dijon',      energie:'Gaz naturel', chauffage:'Chaudière fioul',          eauChaude:'Ballon gaz' },
-    { type:'pv',  name:'Caen Centre',           lat:49.180, lng:-0.371, potPV:'3k6k',  address:'Place Saint-Pierre, 14000 Caen',           energie:'Électricité', chauffage:'Radiateurs élec.',         eauChaude:'Chauffe-eau électrique' },
-    { type:'pac', name:'Strasbourg Cathédrale', lat:48.581, lng:7.751,  potPAC:'gt85', address:'Place de la Cathédrale, 67000 Strasbourg', energie:'Électricité', chauffage:'Pompe à chaleur',          eauChaude:'Ballon solaire' },
-    { type:'pac', name:'Nantes Centre',         lat:47.218, lng:-1.553, potPAC:'gt75', address:'Place du Commerce, 44000 Nantes',          energie:'Gaz naturel', chauffage:'Chaudière gaz',            eauChaude:'Ballon gaz' },
-    { type:'pac', name:'Rennes République',     lat:48.113, lng:-1.676, potPAC:'gt75', address:'Place de la République, 35000 Rennes',     energie:'Électricité', chauffage:'Plancher chauffant',       eauChaude:'Chauffe-eau électrique' },
-    { type:'pac', name:'Lille Grand-Place',     lat:50.637, lng:3.063,  potPAC:'gt65', address:'Grand Place, 59000 Lille',                 energie:'Gaz naturel', chauffage:'Chaudière gaz',            eauChaude:'Ballon gaz' },
-    { type:'pac', name:'Grenoble Centre',       lat:45.188, lng:5.724,  potPAC:'gt75', address:'Place Victor Hugo, 38000 Grenoble',        energie:'Gaz naturel', chauffage:'Chaudière gaz',            eauChaude:'Ballon gaz' },
-    { type:'pac', name:'Metz Cathédrale',       lat:49.120, lng:6.176,  potPAC:'gt65', address:"Place d'Armes, 57000 Metz",                energie:'Gaz naturel', chauffage:'Chaudière gaz',            eauChaude:'Ballon solaire' },
-    { type:'pac', name:'Reims Centre',          lat:49.259, lng:4.032,  potPAC:'gt65', address:"Place Drouet d'Erlon, 51100 Reims",        energie:'Gaz naturel', chauffage:'Chaudière gaz',            eauChaude:'Ballon gaz' },
-    { type:'pac', name:'Clermont-Ferrand',      lat:45.777, lng:3.087,  potPAC:'gt85', address:'Place de Jaude, 63000 Clermont-Ferrand',   energie:'Électricité', chauffage:'Radiateurs élec.',         eauChaude:'Chauffe-eau électrique' },
-    { type:'pac', name:'Amiens Centre',         lat:49.894, lng:2.302,  potPAC:'gt75', address:'Place Gambetta, 80000 Amiens',             energie:'Gaz naturel', chauffage:'Chaudière fioul',          eauChaude:'Ballon gaz' },
-    { type:'pac', name:'Tours Vieux-Tours',     lat:47.394, lng:0.686,  potPAC:'gt65', address:'Place Plumereau, 37000 Tours',             energie:'Électricité', chauffage:'Radiateurs élec.',         eauChaude:'Chauffe-eau électrique' },
-    ...generateRandom(200)
-  ];
+  var PLACES = [
+    { type:'pv',  dept:'33', name:'Bordeaux Chartrons',    lat:44.851, lng:-0.572, potPV:'6k9k',  address:'Cours du Médoc, 33300 Bordeaux',           energie:'Gaz naturel', chauffage:'Chaudière fioul',          eauChaude:'Ballon solaire' },
+    { type:'pac', dept:'33', name:'Bordeaux Centre',       lat:44.837, lng:-0.579, potPAC:'gt85', address:'Place de la Bourse, 33000 Bordeaux',        energie:'Électricité', chauffage:'Pompe à chaleur',          eauChaude:'Ballon solaire' },
+    { type:'pv',  dept:'40', name:'Mont-de-Marsan',        lat:43.890, lng:-0.500, potPV:'6k9k',  address:'Place du Général Leclerc, 40000 Mont-de-Marsan', energie:'Électricité', chauffage:'Pompe à chaleur', eauChaude:'Chauffe-eau thermodynamique' },
+    { type:'pac', dept:'40', name:'Dax Centre',            lat:43.710, lng:-1.050, potPAC:'gt75', address:'Place Thiers, 40100 Dax',                   energie:'Gaz naturel', chauffage:'Chaudière gaz',            eauChaude:'Ballon gaz' },
+    { type:'pv',  dept:'17', name:'La Rochelle Centre',    lat:46.160, lng:-1.151, potPV:'gt9k',  address:'Place de Verdun, 17000 La Rochelle',        energie:'Électricité', chauffage:'Climatisation réversible', eauChaude:'Chauffe-eau thermodynamique' },
+    { type:'pac', dept:'16', name:'Angoulême Centre',      lat:45.649, lng:0.156,  potPAC:'gt65', address:'Place du Champ de Mars, 16000 Angoulême',   energie:'Gaz naturel', chauffage:'Chaudière gaz',            eauChaude:'Ballon gaz' },
+    { type:'pv',  dept:'24', name:'Périgueux Centre',      lat:45.183, lng:0.721,  potPV:'3k6k',  address:'Place Bugeaud, 24000 Périgueux',            energie:'Électricité', chauffage:'Radiateurs élec.',         eauChaude:'Chauffe-eau électrique' },
+    { type:'pac', dept:'47', name:'Agen Centre',           lat:44.200, lng:0.621,  potPAC:'gt75', address:'Boulevard de la République, 47000 Agen',   energie:'Gaz naturel', chauffage:'Chaudière gaz',            eauChaude:'Ballon gaz' },
+    { type:'pv',  dept:'64', name:'Pau Centre',            lat:43.296, lng:-0.371, potPV:'gt9k',  address:'Place Clémenceau, 64000 Pau',               energie:'Électricité', chauffage:'Pompe à chaleur',          eauChaude:'Chauffe-eau thermodynamique' },
+    { type:'pac', dept:'64', name:'Bayonne Centre',        lat:43.492, lng:-1.474, potPAC:'gt85', address:'Place de la Liberté, 64100 Bayonne',        energie:'Électricité', chauffage:'Pompe à chaleur',          eauChaude:'Ballon solaire' },
+    { type:'pv',  dept:'79', name:'Niort Centre',          lat:46.323, lng:-0.461, potPV:'3k6k',  address:'Place de la Brèche, 79000 Niort',           energie:'Gaz naturel', chauffage:'Chaudière fioul',          eauChaude:'Ballon gaz' },
+    { type:'pac', dept:'85', name:'La Roche-sur-Yon',      lat:46.670, lng:-1.426, potPAC:'gt65', address:'Place Napoléon, 85000 La Roche-sur-Yon',    energie:'Électricité', chauffage:'Radiateurs élec.',         eauChaude:'Chauffe-eau électrique' },
+  ].concat(generateRandom(200));
 
   function makeSunIcon(color) {
-    const r = 9, cx = 18, cy = 18, rOuter = 15;
-    const rays = [0,45,90,135,180,225,270,315].map(deg => {
-      const rad = deg * Math.PI / 180;
-      const x1 = (cx + (r+3) * Math.cos(rad)).toFixed(1), y1 = (cy + (r+3) * Math.sin(rad)).toFixed(1);
-      const x2 = (cx + rOuter * Math.cos(rad)).toFixed(1), y2 = (cy + rOuter * Math.sin(rad)).toFixed(1);
-      return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="2.5" stroke-linecap="round"/>`;
+    var r = 9, cx = 18, cy = 18, rOuter = 15;
+    var rays = [0,45,90,135,180,225,270,315].map(function(deg) {
+      var rad = deg * Math.PI / 180;
+      var x1 = (cx + (r+3) * Math.cos(rad)).toFixed(1), y1 = (cy + (r+3) * Math.sin(rad)).toFixed(1);
+      var x2 = (cx + rOuter * Math.cos(rad)).toFixed(1), y2 = (cy + rOuter * Math.sin(rad)).toFixed(1);
+      return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+color+'" stroke-width="2.5" stroke-linecap="round"/>';
     }).join('');
-    const svg = `<svg width="36" height="36" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">${rays}<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}" stroke="white" stroke-width="2"/></svg>`;
-    return L.divIcon({ className:'', html:`<div style="width:36px;height:36px;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.3))">${svg}</div>`, iconSize:[36,36], iconAnchor:[18,18], popupAnchor:[0,-20] });
+    var svg = '<svg width="36" height="36" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">'+rays+'<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="'+color+'" stroke="white" stroke-width="2"/></svg>';
+    return L.divIcon({ className:'', html:'<div style="width:36px;height:36px;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.3))">'+svg+'</div>', iconSize:[36,36], iconAnchor:[18,18], popupAnchor:[0,-20] });
   }
 
   function makeSnowIcon(color) {
-    const svg = `<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><polygon points="16,2 30,16 16,30 2,16" fill="${color}" stroke="white" stroke-width="2"/></svg>`;
-    return L.divIcon({ className:'', html:`<div style="width:32px;height:32px;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.3))">${svg}</div>`, iconSize:[32,32], iconAnchor:[16,16], popupAnchor:[0,-18] });
+    var svg = '<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><polygon points="16,2 30,16 16,30 2,16" fill="'+color+'" stroke="white" stroke-width="2"/></svg>';
+    return L.divIcon({ className:'', html:'<div style="width:32px;height:32px;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.3))">'+svg+'</div>', iconSize:[32,32], iconAnchor:[16,16], popupAnchor:[0,-18] });
   }
 
-  // ── État des filtres ──────────────────────────────────────
-  const filters = {
+  var filters = {
     type:   new Set(['pv','pac']),
     potpv:  new Set(['3k6k','6k9k','gt9k']),
     potpac: new Set(['gt65','gt75','gt85']),
+    dept:   new Set(ALL_DEPTS),
     status: new Set(['absent','aretirer','atraiter','traite']),
   };
-  const filterAllVals = {
+  var filterAllVals = {
     type:   ['pv','pac'],
     potpv:  ['3k6k','6k9k','gt9k'],
     potpac: ['gt65','gt75','gt85'],
+    dept:   ALL_DEPTS,
     status: ['absent','aretirer','atraiter','traite'],
   };
 
-  const placeStatus = {};
-  let markers = [];
+  var placeStatus = {};
+  var markers = [];
 
   function buildPopup(p, i) {
-    const status = placeStatus[i] || 'absent';
-    const isPV = p.type === 'pv';
-    const typeColor = isPV ? '#1a7fd4' : '#ef6c00';
-    const typeBg    = isPV ? '#e8f4ff' : '#fff3e0';
-    const potLabel  = isPV ? PV_LABELS[p.potPV]  : PAC_LABELS[p.potPAC];
-    const potColor  = isPV ? PV_COLORS[p.potPV]  : PAC_COLORS[p.potPAC];
-    const potBadge  = isPV ? PV_BADGE[p.potPV]   : PAC_BADGE[p.potPAC];
-    return `<div class="popup-content">
-      <div class="popup-type-badge" style="background:${typeBg};color:${typeColor}">${isPV ? '☀️ Photovoltaïque' : '🔥 PAC'}</div>
-      <h4>${p.name}</h4>
-      <p style="margin-bottom:6px">${p.address}</p>
-      <span class="popup-badge" style="background:${potColor}33;color:${potBadge}">${isPV ? 'Potentiel PV' : 'Potentiel PAC'} : ${potLabel}</span>
-      <div class="popup-infos">
-        <p><span>Énergie principale :</span> ${p.energie}</p>
-        <p><span>Système de chauffage :</span> ${p.chauffage}</p>
-        <p><span>Système d'eau chaude :</span> ${p.eauChaude}</p>
-      </div>
-      <select class="popup-select" onchange="updateStatus(${i}, this.value)">
-        <option value="absent"   ${status==='absent'   ?'selected':''}>Absent</option>
-        <option value="aretirer" ${status==='aretirer' ?'selected':''}>À retirer</option>
-        <option value="atraiter" ${status==='atraiter' ?'selected':''}>À traiter</option>
-        <option value="traite"   ${status==='traite'   ?'selected':''}>Traité</option>
-      </select>
-    </div>`;
+    var status = placeStatus[i] || 'absent';
+    var isPV = p.type === 'pv';
+    var typeColor = isPV ? '#1a7fd4' : '#ef6c00';
+    var typeBg    = isPV ? '#e8f4ff' : '#fff3e0';
+    var potLabel  = isPV ? PV_LABELS[p.potPV]  : PAC_LABELS[p.potPAC];
+    var potColor  = isPV ? PV_COLORS[p.potPV]  : PAC_COLORS[p.potPAC];
+    var potBadge  = isPV ? PV_BADGE[p.potPV]   : PAC_BADGE[p.potPAC];
+    return '<div class="popup-content">'
+      + '<div class="popup-type-badge" style="background:'+typeBg+';color:'+typeColor+'">'+(isPV ? '☀️ Photovoltaïque' : '🔥 PAC')+'</div>'
+      + '<h4>'+p.name+'</h4>'
+      + '<p style="margin-bottom:4px">'+p.address+'</p>'
+      + '<p style="font-size:11px;color:#8892a4;margin-bottom:6px">Département ' + p.dept + '</p>'
+      + '<span class="popup-badge" style="background:'+potColor+'33;color:'+potBadge+'">'+(isPV ? 'Potentiel PV' : 'Potentiel PAC')+' : '+potLabel+'</span>'
+      + '<div class="popup-infos">'
+      + '<p><span>Énergie principale :</span> '+p.energie+'</p>'
+      + '<p><span>Système de chauffage :</span> '+p.chauffage+'</p>'
+      + '<p><span>Système d\'eau chaude :</span> '+p.eauChaude+'</p>'
+      + '</div>'
+      + '<select class="popup-select" onchange="updateStatus('+i+', this.value)">'
+      + '<option value="absent"'   +(status==='absent'   ?' selected':'')+'> Absent</option>'
+      + '<option value="aretirer"' +(status==='aretirer' ?' selected':'')+'> À retirer</option>'
+      + '<option value="atraiter"' +(status==='atraiter' ?' selected':'')+'> À traiter</option>'
+      + '<option value="traite"'   +(status==='traite'   ?' selected':'')+'> Traité</option>'
+      + '</select></div>';
   }
 
-  const map = L.map('map', { zoomControl: true }).setView([44.5, -0.5], 8);
+  var map = L.map('map', { zoomControl: true }).setView([44.5, -0.5], 7);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
     attribution: '© OpenStreetMap © CartoDB', maxZoom: 19
   }).addTo(map);
 
-  const clusterGroup = L.markerClusterGroup({
+  var clusterGroup = L.markerClusterGroup({
     showCoverageOnHover: false,
     maxClusterRadius: function(zoom) {
       if (zoom <= 6)  return 120;
@@ -244,10 +270,10 @@
     },
     disableClusteringAtZoom: 13,
     iconCreateFunction: function(cluster) {
-      const n = cluster.getChildCount();
+      var n = cluster.getChildCount();
       return L.divIcon({
         className: '',
-        html: '<div style="width:36px;height:36px;border-radius:50%;background:#4f6ef7;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;border:3px solid #fff;box-shadow:0 2px 8px rgba(79,110,247,0.4)">' + n + '</div>',
+        html: '<div style="width:36px;height:36px;border-radius:50%;background:#4f6ef7;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;border:3px solid #fff;box-shadow:0 2px 8px rgba(79,110,247,0.4)">'+n+'</div>',
         iconSize:[36,36], iconAnchor:[18,18]
       });
     }
@@ -257,9 +283,10 @@
   function renderMarkers() {
     clusterGroup.clearLayers();
     markers = [];
-    let count = 0;
+    var count = 0;
     PLACES.forEach(function(p, i) {
       if (!filters.type.has(p.type)) return;
+      if (!filters.dept.has(String(p.dept))) return;
       if (!filters.status.has(placeStatus[i] || 'absent')) return;
       if (p.type === 'pv'  && !filters.potpv.has(p.potPV))   return;
       if (p.type === 'pac' && !filters.potpac.has(p.potPAC)) return;
@@ -269,7 +296,7 @@
       markers.push(m);
       count++;
     });
-    document.getElementById('result-count').innerHTML = '<strong>' + count + '</strong> résultat(s)';
+    document.getElementById('result-count').innerHTML = '<strong>'+count+'</strong> résultat(s)';
   }
 
   function updateStatus(i, val) { placeStatus[i] = val; renderMarkers(); }
@@ -287,7 +314,21 @@
   }
   document.addEventListener('click', function(e) { if (!e.target.closest('.dropdown')) closeAllDD(); });
 
-  // Bind via data-filter + data-value (100% minuscules, sans ambiguïté)
+  function selectAllDepts(e) {
+    e.stopPropagation();
+    filters.dept = new Set(ALL_DEPTS);
+    document.querySelectorAll('[data-filter="dept"]').forEach(function(el) { el.classList.add('active'); });
+    document.querySelector('#dd-dept .dd-btn').classList.remove('has-filter');
+    renderMarkers();
+  }
+  function selectNoneDepts(e) {
+    e.stopPropagation();
+    filters.dept = new Set();
+    document.querySelectorAll('[data-filter="dept"]').forEach(function(el) { el.classList.remove('active'); });
+    document.querySelector('#dd-dept .dd-btn').classList.add('has-filter');
+    renderMarkers();
+  }
+
   document.querySelectorAll('.dd-item').forEach(function(el) {
     el.addEventListener('click', function(e) {
       e.stopPropagation();
@@ -305,6 +346,7 @@
     filters.type   = new Set(['pv','pac']);
     filters.potpv  = new Set(['3k6k','6k9k','gt9k']);
     filters.potpac = new Set(['gt65','gt75','gt85']);
+    filters.dept   = new Set(ALL_DEPTS);
     filters.status = new Set(['absent','aretirer','atraiter','traite']);
     document.querySelectorAll('.dd-item').forEach(function(el) { el.classList.add('active'); });
     document.querySelectorAll('.dd-btn').forEach(function(b) { b.classList.remove('has-filter','open'); });
