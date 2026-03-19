@@ -12,7 +12,6 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', sans-serif; background: #f5f6fa; color: #2d3436; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-
   header { background: #fff; border-bottom: 1px solid #e8eaf0; box-shadow: 0 1px 6px rgba(0,0,0,0.07); z-index: 1000; padding: 0 20px; display: flex; align-items: center; gap: 16px; height: 56px; flex-shrink: 0; }
   .logo { font-size: 15px; font-weight: 700; color: #1a1f36; white-space: nowrap; margin-right: 8px; }
   .divider { width: 1px; height: 24px; background: #e8eaf0; flex-shrink: 0; }
@@ -21,7 +20,6 @@
   .result-badge strong { color: #1a1f36; }
   .reset-btn { padding: 6px 12px; border: 1.5px solid #e8eaf0; border-radius: 8px; background: #fff; color: #4f6ef7; font-size: 12px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: all .15s; }
   .reset-btn:hover { background: #eef1fe; border-color: #4f6ef7; }
-
   .dropdown { position: relative; }
   .dd-btn { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; border: 1.5px solid #e8eaf0; background: #fff; font-size: 13px; color: #1a1f36; cursor: pointer; white-space: nowrap; transition: all .15s; user-select: none; }
   .dd-btn:hover { border-color: #c0c8e0; background: #f8f9fd; }
@@ -37,27 +35,22 @@
   .dd-item .check { margin-left: auto; font-size: 12px; opacity: 0; }
   .dd-item.active .check { opacity: 1; }
   .dd-item .dept-num { font-weight: 700; width: 26px; flex-shrink: 0; }
-
-  /* Boutons select all / none dans le menu département */
   .dd-actions { display: flex; gap: 6px; padding: 4px 10px 8px; }
-  .dd-action-btn { flex: 1; padding: 4px 0; font-size: 11px; border: 1.5px solid #e8eaf0; border-radius: 6px; background: #f8f9fd; color: #4f6ef7; cursor: pointer; font-weight: 500; transition: background .1s; }
+  .dd-action-btn { flex: 1; padding: 4px 0; font-size: 11px; border: 1.5px solid #e8eaf0; border-radius: 6px; background: #f8f9fd; color: #4f6ef7; cursor: pointer; font-weight: 500; }
   .dd-action-btn:hover { background: #eef1fe; }
-
   #map { flex: 1; z-index: 1; }
-
-  .popup-content { min-width: 185px; }
+  .popup-content { min-width: 175px; }
   .popup-content h4 { font-size: 13px; font-weight: 600; margin-bottom: 4px; color: #1a1f36; }
   .popup-type-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; margin-bottom: 5px; }
   .popup-content p { font-size: 12px; color: #636e82; margin-bottom: 3px; }
-  .popup-badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 600; margin-top: 4px; }
-  .popup-infos { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
-  .popup-infos p { color: #636e82; }
-  .popup-infos span { color: #1a1f36; font-weight: 500; }
   .popup-select { margin-top: 8px; width: 100%; padding: 5px 8px; border-radius: 6px; border: 1.5px solid #e8eaf0; font-size: 12px; color: #1a1f36; background: #f8f9fd; cursor: pointer; outline: none; }
   .popup-select:focus { border-color: #4f6ef7; }
+  #loading { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: #fff; padding: 24px 36px; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.12); font-size: 14px; color: #1a1f36; z-index: 9999; }
 </style>
 </head>
 <body>
+
+<div id="loading">⏳ Chargement des données...</div>
 
 <header>
   <div class="logo">⚡ Carte PAC & Photovoltaïque</div>
@@ -68,7 +61,8 @@
       <div class="dd-btn" onclick="toggleDD('type')">Type <span class="arrow">▼</span></div>
       <div class="dd-menu" id="menu-type">
         <div class="dd-item active" data-filter="type" data-value="pv">☀️ Photovoltaïque <span class="check">✓</span></div>
-        <div class="dd-item active" data-filter="type" data-value="pac">❄️ PAC <span class="check">✓</span></div>
+        <div class="dd-item active" data-filter="type" data-value="maison">🏠 Maison PV <span class="check">✓</span></div>
+        <div class="dd-item active" data-filter="type" data-value="pac">🔥 PAC <span class="check">✓</span></div>
       </div>
     </div>
 
@@ -84,9 +78,9 @@
     <div class="dropdown" id="dd-potpac">
       <div class="dd-btn" onclick="toggleDD('potpac')">Potentiel PAC <span class="arrow">▼</span></div>
       <div class="dd-menu" id="menu-potpac">
-        <div class="dd-item active" data-filter="potpac" data-value="gt65"><span class="dot" style="background:#ffcc80"></span> &gt; 65 <span class="check">✓</span></div>
-        <div class="dd-item active" data-filter="potpac" data-value="gt75"><span class="dot" style="background:#ef6c00"></span> &gt; 75 <span class="check">✓</span></div>
-        <div class="dd-item active" data-filter="potpac" data-value="gt85"><span class="dot" style="background:#7f2600"></span> &gt; 85 <span class="check">✓</span></div>
+        <div class="dd-item active" data-filter="potpac" data-value="gt65"><span class="dot" style="background:#ef6c00"></span> &gt; 65 <span class="check">✓</span></div>
+        <div class="dd-item active" data-filter="potpac" data-value="gt75"><span class="dot" style="background:#66bb6a"></span> &gt; 75 <span class="check">✓</span></div>
+        <div class="dd-item active" data-filter="potpac" data-value="gt85"><span class="dot" style="background:#1b5e20"></span> &gt; 85 <span class="check">✓</span></div>
       </div>
     </div>
 
@@ -120,7 +114,7 @@
     </div>
 
     <button class="reset-btn" onclick="resetFilters()">↺ Réinitialiser</button>
-    <div class="result-badge" id="result-count"><strong>0</strong> résultat(s)</div>
+    <div class="result-badge" id="result-count"><strong>—</strong></div>
   </div>
 </header>
 
@@ -130,123 +124,108 @@
   var PV_COLORS  = { '3k6k':'#57aeff', '6k9k':'#1a7fd4', 'gt9k':'#003f7f' };
   var PV_BADGE   = { '3k6k':'#1a7fd4', '6k9k':'#003f7f', 'gt9k':'#002655' };
   var PV_LABELS  = { '3k6k':'3k – 6k', '6k9k':'6k – 9k', 'gt9k':'> 9k' };
-  var PAC_COLORS = { 'gt65':'#ffcc80', 'gt75':'#ef6c00', 'gt85':'#7f2600' };
-  var PAC_BADGE  = { 'gt65':'#b34e00', 'gt75':'#7f2600', 'gt85':'#4a1500' };
+  var PAC_COLORS = { 'gt65':'#ef6c00', 'gt75':'#66bb6a', 'gt85':'#1b5e20' };
+  var PAC_BADGE  = { 'gt65':'#b34e00', 'gt75':'#2e7d32', 'gt85':'#0a3d0a' };
   var PAC_LABELS = { 'gt65':'> 65', 'gt75':'> 75', 'gt85':'> 85' };
+  var ALL_DEPTS  = ['16','17','24','33','40','47','64','79','85'];
 
-  // Boîtes englobantes par département
-  var DEPT_BOUNDS = {
-    '16': { latMin:45.18, latMax:46.08, lngMin:-0.48, lngMax:0.60 },
-    '17': { latMin:45.10, latMax:46.08, lngMin:-1.55, lngMax:-0.10 },
-    '24': { latMin:44.35, latMax:45.40, lngMin:0.22,  lngMax:1.55 },
-    '33': { latMin:44.20, latMax:45.30, lngMin:-1.28, lngMax:0.30 },
-    '40': { latMin:43.48, latMax:44.52, lngMin:-1.55, lngMax:0.05 },
-    '47': { latMin:43.90, latMax:44.70, lngMin:0.10,  lngMax:1.20 },
-    '64': { latMin:43.00, latMax:43.80, lngMin:-1.78, lngMax:0.10 },
-    '79': { latMin:46.10, latMax:47.00, lngMin:-0.75, lngMax:0.30 },
-    '85': { latMin:46.30, latMax:47.10, lngMin:-2.00, lngMax:-0.55 },
-  };
-
-  var ALL_DEPTS = ['16','17','24','33','40','47','64','79','85'];
-
-  function generateRandom(n) {
-    var potPVs  = ['3k6k','6k9k','gt9k'];
-    var potPACs = ['gt65','gt75','gt85'];
-    var energies = ['Électricité','Gaz naturel'];
-    var chaufs   = ['Pompe à chaleur','Chaudière gaz','Radiateurs élec.','Plancher chauffant','Climatisation réversible','Chaudière fioul'];
-    var eaux     = ['Chauffe-eau thermodynamique','Ballon gaz','Ballon solaire','Chauffe-eau électrique'];
+  // ── Parsing CSV ───────────────────────────────────────────
+  function parseCSV(raw) {
+    var lines = raw.trim().split('\n');
     var out = [];
-    for (var i = 0; i < n; i++) {
-      var dept = ALL_DEPTS[Math.floor(Math.random() * ALL_DEPTS.length)];
-      var b    = DEPT_BOUNDS[dept];
-      var type = Math.random() < 0.55 ? 'pv' : 'pac';
-      var p = {
-        type: type,
-        dept: dept,
-        lat: b.latMin + Math.random() * (b.latMax - b.latMin),
-        lng: b.lngMin + Math.random() * (b.lngMax - b.lngMin),
-        name: 'Point ' + dept + '-' + (i + 1),
-        address: 'Département ' + dept + ', France',
-        energie:   energies[Math.floor(Math.random() * energies.length)],
-        chauffage: chaufs[Math.floor(Math.random() * chaufs.length)],
-        eauChaude: eaux[Math.floor(Math.random() * eaux.length)],
-      };
-      if (type === 'pv') p.potPV  = potPVs[Math.floor(Math.random() * potPVs.length)];
-      else               p.potPAC = potPACs[Math.floor(Math.random() * potPACs.length)];
-      out.push(p);
+    for (var i = 1; i < lines.length; i++) {
+      var line = lines[i].trim();
+      if (!line) continue;
+      var parts = line.split(';');
+      if (parts.length < 2) continue;
+      var coords = parts[0].trim().split(',');
+      if (coords.length < 2) continue;
+      var lat = parseFloat(coords[0]);
+      var lng = parseFloat(coords[1]);
+      var lt  = parts[1].trim().toUpperCase();
+      if (isNaN(lat) || isNaN(lng)) continue;
+      var type = lt === 'PV2' ? 'maison' : lt === 'PAC' ? 'pac' : 'pv';
+      out.push({
+        type: type, leadType: lt,
+        lat: lat, lng: lng,
+        dept: '??',
+        name: lt + ' #' + i,
+        address: lat.toFixed(5) + ', ' + lng.toFixed(5),
+        potPV: 'gt9k', potPAC: 'gt85',
+      });
     }
     return out;
   }
 
-  var PLACES = [
-    { type:'pv',  dept:'33', name:'Bordeaux Chartrons',    lat:44.851, lng:-0.572, potPV:'6k9k',  address:'Cours du Médoc, 33300 Bordeaux',           energie:'Gaz naturel', chauffage:'Chaudière fioul',          eauChaude:'Ballon solaire' },
-    { type:'pac', dept:'33', name:'Bordeaux Centre',       lat:44.837, lng:-0.579, potPAC:'gt85', address:'Place de la Bourse, 33000 Bordeaux',        energie:'Électricité', chauffage:'Pompe à chaleur',          eauChaude:'Ballon solaire' },
-    { type:'pv',  dept:'40', name:'Mont-de-Marsan',        lat:43.890, lng:-0.500, potPV:'6k9k',  address:'Place du Général Leclerc, 40000 Mont-de-Marsan', energie:'Électricité', chauffage:'Pompe à chaleur', eauChaude:'Chauffe-eau thermodynamique' },
-    { type:'pac', dept:'40', name:'Dax Centre',            lat:43.710, lng:-1.050, potPAC:'gt75', address:'Place Thiers, 40100 Dax',                   energie:'Gaz naturel', chauffage:'Chaudière gaz',            eauChaude:'Ballon gaz' },
-    { type:'pv',  dept:'17', name:'La Rochelle Centre',    lat:46.160, lng:-1.151, potPV:'gt9k',  address:'Place de Verdun, 17000 La Rochelle',        energie:'Électricité', chauffage:'Climatisation réversible', eauChaude:'Chauffe-eau thermodynamique' },
-    { type:'pac', dept:'16', name:'Angoulême Centre',      lat:45.649, lng:0.156,  potPAC:'gt65', address:'Place du Champ de Mars, 16000 Angoulême',   energie:'Gaz naturel', chauffage:'Chaudière gaz',            eauChaude:'Ballon gaz' },
-    { type:'pv',  dept:'24', name:'Périgueux Centre',      lat:45.183, lng:0.721,  potPV:'3k6k',  address:'Place Bugeaud, 24000 Périgueux',            energie:'Électricité', chauffage:'Radiateurs élec.',         eauChaude:'Chauffe-eau électrique' },
-    { type:'pac', dept:'47', name:'Agen Centre',           lat:44.200, lng:0.621,  potPAC:'gt75', address:'Boulevard de la République, 47000 Agen',   energie:'Gaz naturel', chauffage:'Chaudière gaz',            eauChaude:'Ballon gaz' },
-    { type:'pv',  dept:'64', name:'Pau Centre',            lat:43.296, lng:-0.371, potPV:'gt9k',  address:'Place Clémenceau, 64000 Pau',               energie:'Électricité', chauffage:'Pompe à chaleur',          eauChaude:'Chauffe-eau thermodynamique' },
-    { type:'pac', dept:'64', name:'Bayonne Centre',        lat:43.492, lng:-1.474, potPAC:'gt85', address:'Place de la Liberté, 64100 Bayonne',        energie:'Électricité', chauffage:'Pompe à chaleur',          eauChaude:'Ballon solaire' },
-    { type:'pv',  dept:'79', name:'Niort Centre',          lat:46.323, lng:-0.461, potPV:'3k6k',  address:'Place de la Brèche, 79000 Niort',           energie:'Gaz naturel', chauffage:'Chaudière fioul',          eauChaude:'Ballon gaz' },
-    { type:'pac', dept:'85', name:'La Roche-sur-Yon',      lat:46.670, lng:-1.426, potPAC:'gt65', address:'Place Napoléon, 85000 La Roche-sur-Yon',    energie:'Électricité', chauffage:'Radiateurs élec.',         eauChaude:'Chauffe-eau électrique' },
-  ].concat(generateRandom(200));
-
-  function makeSunIcon(color) {
-    var r = 9, cx = 18, cy = 18, rOuter = 15;
-    var rays = [0,45,90,135,180,225,270,315].map(function(deg) {
-      var rad = deg * Math.PI / 180;
-      var x1 = (cx + (r+3) * Math.cos(rad)).toFixed(1), y1 = (cy + (r+3) * Math.sin(rad)).toFixed(1);
-      var x2 = (cx + rOuter * Math.cos(rad)).toFixed(1), y2 = (cy + rOuter * Math.sin(rad)).toFixed(1);
-      return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+color+'" stroke-width="2.5" stroke-linecap="round"/>';
-    }).join('');
-    var svg = '<svg width="36" height="36" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">'+rays+'<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="'+color+'" stroke="white" stroke-width="2"/></svg>';
-    return L.divIcon({ className:'', html:'<div style="width:36px;height:36px;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.3))">'+svg+'</div>', iconSize:[36,36], iconAnchor:[18,18], popupAnchor:[0,-20] });
+  // ── Icônes SVG ────────────────────────────────────────────
+  function makePVIcon(color, potKey) {
+    var panels = potKey === '3k6k' ? 1 : potKey === '6k9k' ? 2 : 3;
+    var s = '<svg width="40" height="52" viewBox="0 0 40 52" xmlns="http://www.w3.org/2000/svg">';
+    for (var p = panels - 1; p >= 0; p--) {
+      var ox = p * 7, oy = p * 9;
+      s += '<g transform="translate('+(20+ox)+','+(20-oy)+') rotate(-10)">';
+      s += '<rect x="-14" y="-9" width="28" height="18" rx="3" fill="'+color+'" stroke="white" stroke-width="1.8"/>';
+      s += '<line x1="-5" y1="-9" x2="-5" y2="9" stroke="white" stroke-width="1"/>';
+      s += '<line x1="5"  y1="-9" x2="5"  y2="9" stroke="white" stroke-width="1"/>';
+      s += '<line x1="-13" y1="0" x2="13" y2="0" stroke="white" stroke-width="1"/>';
+      s += '</g>';
+    }
+    s += '<line x1="20" y1="32" x2="20" y2="46" stroke="'+color+'" stroke-width="2.5"/>';
+    s += '<ellipse cx="20" cy="47" rx="6" ry="3" fill="'+color+'" opacity="0.3"/>';
+    s += '</svg>';
+    return L.divIcon({ className:'', html:'<div style="width:40px;height:52px;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.3))">'+s+'</div>', iconSize:[40,52], iconAnchor:[20,50], popupAnchor:[0,-50] });
   }
 
-  function makeSnowIcon(color) {
-    var svg = '<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><polygon points="16,2 30,16 16,30 2,16" fill="'+color+'" stroke="white" stroke-width="2"/></svg>';
-    return L.divIcon({ className:'', html:'<div style="width:32px;height:32px;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.3))">'+svg+'</div>', iconSize:[32,32], iconAnchor:[16,16], popupAnchor:[0,-18] });
+  function makeMaisonIcon() {
+    var c = '#e67e22', cb = '#1a7fd4';
+    var s = '<svg width="44" height="56" viewBox="0 0 44 56" xmlns="http://www.w3.org/2000/svg">';
+    s += '<polygon points="22,2 2,20 42,20" fill="'+c+'" stroke="white" stroke-width="2"/>';
+    s += '<g transform="translate(22,13) rotate(-20)">';
+    s += '<rect x="-13" y="-7" width="11" height="8" rx="2" fill="'+cb+'" stroke="white" stroke-width="1.2"/>';
+    s += '<line x1="-7" y1="-7" x2="-7" y2="1" stroke="white" stroke-width="0.8"/>';
+    s += '<line x1="-13" y1="-3" x2="-2" y2="-3" stroke="white" stroke-width="0.8"/>';
+    s += '<rect x="1" y="-7" width="11" height="8" rx="2" fill="'+cb+'" stroke="white" stroke-width="1.2"/>';
+    s += '<line x1="7"  y1="-7" x2="7"  y2="1" stroke="white" stroke-width="0.8"/>';
+    s += '<line x1="1"  y1="-3" x2="12" y2="-3" stroke="white" stroke-width="0.8"/>';
+    s += '</g>';
+    s += '<rect x="4" y="20" width="36" height="26" rx="2" fill="'+c+'" stroke="white" stroke-width="1.5"/>';
+    s += '<rect x="15" y="32" width="10" height="14" rx="2" fill="white" opacity="0.6"/>';
+    s += '<rect x="6"  y="23" width="8"  height="8" rx="1" fill="white" opacity="0.6"/>';
+    s += '<rect x="30" y="23" width="8"  height="8" rx="1" fill="white" opacity="0.6"/>';
+    s += '<line x1="22" y1="46" x2="22" y2="52" stroke="'+c+'" stroke-width="2.5"/>';
+    s += '<ellipse cx="22" cy="53" rx="6" ry="3" fill="'+c+'" opacity="0.3"/>';
+    s += '</svg>';
+    return L.divIcon({ className:'', html:'<div style="width:44px;height:56px;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.3))">'+s+'</div>', iconSize:[44,56], iconAnchor:[22,54], popupAnchor:[0,-54] });
   }
 
-  var filters = {
-    type:   new Set(['pv','pac']),
-    potpv:  new Set(['3k6k','6k9k','gt9k']),
-    potpac: new Set(['gt65','gt75','gt85']),
-    dept:   new Set(ALL_DEPTS),
-    status: new Set(['absent','aretirer','atraiter','traite']),
-  };
-  var filterAllVals = {
-    type:   ['pv','pac'],
-    potpv:  ['3k6k','6k9k','gt9k'],
-    potpac: ['gt65','gt75','gt85'],
-    dept:   ALL_DEPTS,
-    status: ['absent','aretirer','atraiter','traite'],
-  };
+  function makePACIcon(color) {
+    var s = '<svg width="36" height="52" viewBox="0 0 36 52" xmlns="http://www.w3.org/2000/svg">';
+    s += '<rect x="2" y="2" width="32" height="36" rx="5" fill="'+color+'" stroke="white" stroke-width="2"/>';
+    s += '<line x1="8"  y1="7" x2="8"  y2="34" stroke="white" stroke-width="1.2"/>';
+    s += '<line x1="14" y1="7" x2="14" y2="34" stroke="white" stroke-width="1.2"/>';
+    s += '<line x1="20" y1="7" x2="20" y2="34" stroke="white" stroke-width="1.2"/>';
+    s += '<line x1="26" y1="7" x2="26" y2="34" stroke="white" stroke-width="1.2"/>';
+    s += '<circle cx="14" cy="20" r="9" fill="none" stroke="white" stroke-width="1.8"/>';
+    s += '<circle cx="14" cy="20" r="3" fill="white"/>';
+    s += '<line x1="12" y1="38" x2="12" y2="47" stroke="'+color+'" stroke-width="2"/>';
+    s += '<line x1="22" y1="38" x2="22" y2="47" stroke="'+color+'" stroke-width="2"/>';
+    s += '<ellipse cx="17" cy="48" rx="8" ry="3" fill="'+color+'" opacity="0.3"/>';
+    s += '</svg>';
+    return L.divIcon({ className:'', html:'<div style="width:36px;height:52px;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.3))">'+s+'</div>', iconSize:[36,52], iconAnchor:[18,50], popupAnchor:[0,-50] });
+  }
 
-  var placeStatus = {};
-  var markers = [];
-
+  // ── Popup ──────────────────────────────────────────────────
   function buildPopup(p, i) {
-    var status = placeStatus[i] || 'absent';
-    var isPV = p.type === 'pv';
-    var typeColor = isPV ? '#1a7fd4' : '#ef6c00';
-    var typeBg    = isPV ? '#e8f4ff' : '#fff3e0';
-    var potLabel  = isPV ? PV_LABELS[p.potPV]  : PAC_LABELS[p.potPAC];
-    var potColor  = isPV ? PV_COLORS[p.potPV]  : PAC_COLORS[p.potPAC];
-    var potBadge  = isPV ? PV_BADGE[p.potPV]   : PAC_BADGE[p.potPAC];
+    var status   = placeStatus[i] || 'absent';
+    var isMaison = p.type === 'maison';
+    var isPAC    = p.type === 'pac';
+    var typeColor = isPAC ? '#ef6c00' : isMaison ? '#e67e22' : '#1a7fd4';
+    var typeBg    = isPAC ? '#fff3e0' : isMaison ? '#fef5ec' : '#e8f4ff';
+    var typeLabel = isPAC ? '🔥 PAC' : isMaison ? '🏠 Maison PV' : '☀️ ' + p.leadType;
     return '<div class="popup-content">'
-      + '<div class="popup-type-badge" style="background:'+typeBg+';color:'+typeColor+'">'+(isPV ? '☀️ Photovoltaïque' : '🔥 PAC')+'</div>'
+      + '<div class="popup-type-badge" style="background:'+typeBg+';color:'+typeColor+'">'+typeLabel+'</div>'
       + '<h4>'+p.name+'</h4>'
-      + '<p style="margin-bottom:4px">'+p.address+'</p>'
-      + '<p style="font-size:11px;color:#8892a4;margin-bottom:6px">Département ' + p.dept + '</p>'
-      + '<span class="popup-badge" style="background:'+potColor+'33;color:'+potBadge+'">'+(isPV ? 'Potentiel PV' : 'Potentiel PAC')+' : '+potLabel+'</span>'
-      + '<div class="popup-infos">'
-      + '<p><span>Énergie principale :</span> '+p.energie+'</p>'
-      + '<p><span>Système de chauffage :</span> '+p.chauffage+'</p>'
-      + '<p><span>Système d\'eau chaude :</span> '+p.eauChaude+'</p>'
-      + '</div>'
+      + '<p>'+p.address+'</p>'
       + '<select class="popup-select" onchange="updateStatus('+i+', this.value)">'
       + '<option value="absent"'   +(status==='absent'   ?' selected':'')+'> Absent</option>'
       + '<option value="aretirer"' +(status==='aretirer' ?' selected':'')+'> À retirer</option>'
@@ -254,6 +233,25 @@
       + '<option value="traite"'   +(status==='traite'   ?' selected':'')+'> Traité</option>'
       + '</select></div>';
   }
+
+  // ── État & carte ──────────────────────────────────────────
+  var placeStatus = {};
+  var markers = [];
+  var PLACES  = [];
+  var filters = {
+    type:   new Set(['pv','pac','maison']),
+    potpv:  new Set(['3k6k','6k9k','gt9k']),
+    potpac: new Set(['gt65','gt75','gt85']),
+    dept:   new Set(ALL_DEPTS),
+    status: new Set(['absent','aretirer','atraiter','traite']),
+  };
+  var filterAllVals = {
+    type:   ['pv','pac','maison'],
+    potpv:  ['3k6k','6k9k','gt9k'],
+    potpac: ['gt65','gt75','gt85'],
+    dept:   ALL_DEPTS,
+    status: ['absent','aretirer','atraiter','traite'],
+  };
 
   var map = L.map('map', { zoomControl: true }).setView([44.5, -0.5], 7);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
@@ -286,11 +284,13 @@
     var count = 0;
     PLACES.forEach(function(p, i) {
       if (!filters.type.has(p.type)) return;
-      if (!filters.dept.has(String(p.dept))) return;
       if (!filters.status.has(placeStatus[i] || 'absent')) return;
-      if (p.type === 'pv'  && !filters.potpv.has(p.potPV))   return;
+      if ((p.type === 'pv' || p.type === 'maison') && !filters.potpv.has(p.potPV)) return;
       if (p.type === 'pac' && !filters.potpac.has(p.potPAC)) return;
-      var icon = p.type === 'pv' ? makeSunIcon(PV_COLORS[p.potPV]) : makeSnowIcon(PAC_COLORS[p.potPAC]);
+      var icon;
+      if (p.type === 'pv')          icon = makePVIcon(PV_COLORS[p.potPV], p.potPV);
+      else if (p.type === 'maison') icon = makeMaisonIcon();
+      else                          icon = makePACIcon(PAC_COLORS[p.potPAC]);
       var m = L.marker([p.lat, p.lng], { icon: icon }).bindPopup(buildPopup(p, i));
       clusterGroup.addLayer(m);
       markers.push(m);
@@ -334,6 +334,7 @@
       e.stopPropagation();
       var f = el.getAttribute('data-filter');
       var v = el.getAttribute('data-value');
+      if (!f || !v) return;
       if (filters[f].has(v)) { filters[f].delete(v); el.classList.remove('active'); }
       else                   { filters[f].add(v);    el.classList.add('active'); }
       var btn = document.querySelector('#dd-' + f + ' .dd-btn');
@@ -343,7 +344,7 @@
   });
 
   function resetFilters() {
-    filters.type   = new Set(['pv','pac']);
+    filters.type   = new Set(['pv','pac','maison']);
     filters.potpv  = new Set(['3k6k','6k9k','gt9k']);
     filters.potpac = new Set(['gt65','gt75','gt85']);
     filters.dept   = new Set(ALL_DEPTS);
@@ -354,7 +355,20 @@
     renderMarkers();
   }
 
-  renderMarkers();
+  // ── Chargement CSV ────────────────────────────────────────
+  fetch('dpe_validated%201.csv')
+    .then(function(r) {
+      if (!r.ok) throw new Error('Fichier CSV introuvable');
+      return r.text();
+    })
+    .then(function(text) {
+      PLACES = parseCSV(text);
+      document.getElementById('loading').style.display = 'none';
+      renderMarkers();
+    })
+    .catch(function(err) {
+      document.getElementById('loading').innerHTML = '⚠️ ' + err.message + '<br><small>Vérifiez que le fichier CSV est bien à la racine du repo.</small>';
+    });
 </script>
 </body>
 </html>
